@@ -1,0 +1,196 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2026.1 (lin64) Build 6511674 Tue Jun 16 11:01:26 MDT 2026
+| Date         : Thu Aug 20 09:33:55 2026
+| Host         : redacted running 64-bit Ubuntu 24.04.4 LTS
+| Command      : report_utilization -hierarchical -hierarchical_depth 2 -file token3_80pipe_350_margin_utilization_hier_routed.rpt
+| Design       : miner_top_80pipe_token3_350_margin
+| Device       : xcvu33p-fsvh2104-2-e
+| Speed File   : -2
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++----------------------------------------+--------------------------------------+------------+------------+---------+------+--------+--------+--------+------+------------+
+|                Instance                |                Module                | Total LUTs | Logic LUTs | LUTRAMs | SRLs |   FFs  | RAMB36 | RAMB18 | URAM | DSP Blocks |
++----------------------------------------+--------------------------------------+------------+------------+---------+------+--------+--------+--------+------+------------+
+| miner_top_80pipe_token3_350_margin     |                                (top) |     263212 |     263192 |      20 |    0 | 530114 |      0 |      0 |    0 |          0 |
+|   (miner_top_80pipe_token3_350_margin) |                                (top) |       8328 |       8328 |       0 |    0 |  32674 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[0].u_candidate_bus_cdc      |             xpm_cdc_array_single__73 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[10].u_candidate_bus_cdc     |                 xpm_cdc_array_single |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[11].u_candidate_bus_cdc     |             xpm_cdc_array_single__68 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[12].u_candidate_bus_cdc     |             xpm_cdc_array_single__67 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[13].u_candidate_bus_cdc     |             xpm_cdc_array_single__66 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[14].u_candidate_bus_cdc     |             xpm_cdc_array_single__65 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[15].u_candidate_bus_cdc     |             xpm_cdc_array_single__64 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[16].u_candidate_bus_cdc     |             xpm_cdc_array_single__41 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[17].u_candidate_bus_cdc     |             xpm_cdc_array_single__40 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[18].u_candidate_bus_cdc     |             xpm_cdc_array_single__39 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[19].u_candidate_bus_cdc     |             xpm_cdc_array_single__38 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[1].u_candidate_bus_cdc      |             xpm_cdc_array_single__72 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[20].u_candidate_bus_cdc     |             xpm_cdc_array_single__37 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[21].u_candidate_bus_cdc     |             xpm_cdc_array_single__36 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[22].u_candidate_bus_cdc     |             xpm_cdc_array_single__35 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[23].u_candidate_bus_cdc     |             xpm_cdc_array_single__34 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[24].u_candidate_bus_cdc     |             xpm_cdc_array_single__63 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[25].u_candidate_bus_cdc     |             xpm_cdc_array_single__79 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[26].u_candidate_bus_cdc     |             xpm_cdc_array_single__78 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[27].u_candidate_bus_cdc     |             xpm_cdc_array_single__77 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[28].u_candidate_bus_cdc     |             xpm_cdc_array_single__76 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[29].u_candidate_bus_cdc     |             xpm_cdc_array_single__62 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[2].u_candidate_bus_cdc      |             xpm_cdc_array_single__71 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[30].u_candidate_bus_cdc     |             xpm_cdc_array_single__61 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[31].u_candidate_bus_cdc     |             xpm_cdc_array_single__75 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[32].u_candidate_bus_cdc     |             xpm_cdc_array_single__28 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[33].u_candidate_bus_cdc     |             xpm_cdc_array_single__30 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[34].u_candidate_bus_cdc     |             xpm_cdc_array_single__32 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[35].u_candidate_bus_cdc     |             xpm_cdc_array_single__33 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[36].u_candidate_bus_cdc     |             xpm_cdc_array_single__31 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[37].u_candidate_bus_cdc     |             xpm_cdc_array_single__19 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[38].u_candidate_bus_cdc     |             xpm_cdc_array_single__17 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[39].u_candidate_bus_cdc     |             xpm_cdc_array_single__16 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[3].u_candidate_bus_cdc      |             xpm_cdc_array_single__43 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[40].u_candidate_bus_cdc     |             xpm_cdc_array_single__51 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[41].u_candidate_bus_cdc     |             xpm_cdc_array_single__50 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[42].u_candidate_bus_cdc     |             xpm_cdc_array_single__49 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[43].u_candidate_bus_cdc     |             xpm_cdc_array_single__48 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[44].u_candidate_bus_cdc     |             xpm_cdc_array_single__47 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[45].u_candidate_bus_cdc     |             xpm_cdc_array_single__13 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[46].u_candidate_bus_cdc     |             xpm_cdc_array_single__12 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[47].u_candidate_bus_cdc     |             xpm_cdc_array_single__46 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[48].u_candidate_bus_cdc     |             xpm_cdc_array_single__14 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[49].u_candidate_bus_cdc     |             xpm_cdc_array_single__15 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[4].u_candidate_bus_cdc      |             xpm_cdc_array_single__29 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[50].u_candidate_bus_cdc     |             xpm_cdc_array_single__18 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[51].u_candidate_bus_cdc     |             xpm_cdc_array_single__21 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[52].u_candidate_bus_cdc     |             xpm_cdc_array_single__20 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[53].u_candidate_bus_cdc     |              xpm_cdc_array_single__9 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[54].u_candidate_bus_cdc     |             xpm_cdc_array_single__10 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[55].u_candidate_bus_cdc     |             xpm_cdc_array_single__11 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[56].u_candidate_bus_cdc     |             xpm_cdc_array_single__60 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[57].u_candidate_bus_cdc     |             xpm_cdc_array_single__59 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[58].u_candidate_bus_cdc     |             xpm_cdc_array_single__58 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[59].u_candidate_bus_cdc     |             xpm_cdc_array_single__57 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[5].u_candidate_bus_cdc      |             xpm_cdc_array_single__26 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[60].u_candidate_bus_cdc     |             xpm_cdc_array_single__56 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[61].u_candidate_bus_cdc     |             xpm_cdc_array_single__55 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[62].u_candidate_bus_cdc     |             xpm_cdc_array_single__54 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[63].u_candidate_bus_cdc     |             xpm_cdc_array_single__53 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[64].u_candidate_bus_cdc     |             xpm_cdc_array_single__22 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[65].u_candidate_bus_cdc     |             xpm_cdc_array_single__52 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[66].u_candidate_bus_cdc     |             xpm_cdc_array_single__45 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[67].u_candidate_bus_cdc     |             xpm_cdc_array_single__74 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[68].u_candidate_bus_cdc     |             xpm_cdc_array_single__44 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[69].u_candidate_bus_cdc     |             xpm_cdc_array_single__24 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[6].u_candidate_bus_cdc      |             xpm_cdc_array_single__42 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[70].u_candidate_bus_cdc     |             xpm_cdc_array_single__25 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[71].u_candidate_bus_cdc     |             xpm_cdc_array_single__27 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[72].u_candidate_bus_cdc     |              xpm_cdc_array_single__8 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[73].u_candidate_bus_cdc     |              xpm_cdc_array_single__7 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[74].u_candidate_bus_cdc     |              xpm_cdc_array_single__6 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[75].u_candidate_bus_cdc     |              xpm_cdc_array_single__5 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[76].u_candidate_bus_cdc     |              xpm_cdc_array_single__4 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[77].u_candidate_bus_cdc     |              xpm_cdc_array_single__3 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[78].u_candidate_bus_cdc     |              xpm_cdc_array_single__2 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[79].u_candidate_bus_cdc     |              xpm_cdc_array_single__1 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[7].u_candidate_bus_cdc      |             xpm_cdc_array_single__23 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[8].u_candidate_bus_cdc      |             xpm_cdc_array_single__70 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   CAND_CDC[9].u_candidate_bus_cdc      |             xpm_cdc_array_single__69 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[0].u_pipe                 |                 sha3t_token4_core__1 |       3159 |       3159 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[10].u_pipe                |                sha3t_token4_core__11 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[11].u_pipe                |                sha3t_token4_core__12 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[12].u_pipe                |                sha3t_token4_core__13 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[13].u_pipe                |                sha3t_token4_core__14 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[14].u_pipe                |                sha3t_token4_core__15 |       3162 |       3162 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[15].u_pipe                |                sha3t_token4_core__16 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[16].u_pipe                |                sha3t_token4_core__17 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[17].u_pipe                |                sha3t_token4_core__18 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[18].u_pipe                |                sha3t_token4_core__19 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[19].u_pipe                |                sha3t_token4_core__20 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[1].u_pipe                 |                 sha3t_token4_core__2 |       3161 |       3161 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[20].u_pipe                |                sha3t_token4_core__21 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[21].u_pipe                |                sha3t_token4_core__22 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[22].u_pipe                |                sha3t_token4_core__23 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[23].u_pipe                |                sha3t_token4_core__24 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[24].u_pipe                |                sha3t_token4_core__25 |       3159 |       3159 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[25].u_pipe                |                sha3t_token4_core__26 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[26].u_pipe                |                sha3t_token4_core__27 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[27].u_pipe                |                sha3t_token4_core__28 |       3153 |       3153 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[28].u_pipe                |                sha3t_token4_core__29 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[29].u_pipe                |                sha3t_token4_core__30 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[2].u_pipe                 |                 sha3t_token4_core__3 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[30].u_pipe                |                sha3t_token4_core__31 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[31].u_pipe                |                sha3t_token4_core__32 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[32].u_pipe                |                sha3t_token4_core__33 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[33].u_pipe                |                sha3t_token4_core__34 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[34].u_pipe                |                sha3t_token4_core__35 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[35].u_pipe                |                sha3t_token4_core__36 |       3176 |       3176 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[36].u_pipe                |                sha3t_token4_core__37 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[37].u_pipe                |                sha3t_token4_core__38 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[38].u_pipe                |                sha3t_token4_core__39 |       3153 |       3153 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[39].u_pipe                |                sha3t_token4_core__40 |       3160 |       3160 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[3].u_pipe                 |                 sha3t_token4_core__4 |       3192 |       3192 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[40].u_pipe                |                sha3t_token4_core__41 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[41].u_pipe                |                sha3t_token4_core__42 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[42].u_pipe                |                sha3t_token4_core__43 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[43].u_pipe                |                sha3t_token4_core__44 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[44].u_pipe                |                sha3t_token4_core__45 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[45].u_pipe                |                sha3t_token4_core__46 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[46].u_pipe                |                sha3t_token4_core__47 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[47].u_pipe                |                sha3t_token4_core__48 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[48].u_pipe                |                sha3t_token4_core__49 |       3179 |       3179 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[49].u_pipe                |                sha3t_token4_core__50 |       3156 |       3156 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[4].u_pipe                 |                 sha3t_token4_core__5 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[50].u_pipe                |                sha3t_token4_core__51 |       3160 |       3160 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[51].u_pipe                |                sha3t_token4_core__52 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[52].u_pipe                |                sha3t_token4_core__53 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[53].u_pipe                |                sha3t_token4_core__54 |       3156 |       3156 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[54].u_pipe                |                sha3t_token4_core__55 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[55].u_pipe                |                sha3t_token4_core__56 |       3161 |       3161 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[56].u_pipe                |                sha3t_token4_core__57 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[57].u_pipe                |                sha3t_token4_core__58 |       3216 |       3216 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[58].u_pipe                |                sha3t_token4_core__59 |       3169 |       3169 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[59].u_pipe                |                sha3t_token4_core__60 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[5].u_pipe                 |                 sha3t_token4_core__6 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[60].u_pipe                |                sha3t_token4_core__61 |       3165 |       3165 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[61].u_pipe                |                sha3t_token4_core__62 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[62].u_pipe                |                sha3t_token4_core__63 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[63].u_pipe                |                sha3t_token4_core__64 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[64].u_pipe                |                sha3t_token4_core__65 |       3257 |       3257 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[65].u_pipe                |                sha3t_token4_core__66 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[66].u_pipe                |                sha3t_token4_core__67 |       3159 |       3159 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[67].u_pipe                |                sha3t_token4_core__68 |       3204 |       3204 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[68].u_pipe                |                sha3t_token4_core__69 |       3157 |       3157 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[69].u_pipe                |                sha3t_token4_core__70 |       3153 |       3153 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[6].u_pipe                 |                 sha3t_token4_core__7 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[70].u_pipe                |                sha3t_token4_core__71 |       3237 |       3237 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[71].u_pipe                |                sha3t_token4_core__72 |       3164 |       3164 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[72].u_pipe                |                sha3t_token4_core__73 |       3165 |       3165 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[73].u_pipe                |                sha3t_token4_core__74 |       3194 |       3194 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[74].u_pipe                |                sha3t_token4_core__75 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[75].u_pipe                |                sha3t_token4_core__76 |       3206 |       3206 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[76].u_pipe                |                sha3t_token4_core__77 |       3160 |       3160 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[77].u_pipe                |                sha3t_token4_core__78 |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[78].u_pipe                |                sha3t_token4_core__79 |       3156 |       3156 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[79].u_pipe                |                    sha3t_token4_core |       3154 |       3154 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[7].u_pipe                 |                 sha3t_token4_core__8 |       3328 |       3328 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[8].u_pipe                 |                 sha3t_token4_core__9 |       3156 |       3156 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   PIPE_ARRAY[9].u_pipe                 |                sha3t_token4_core__10 |       3155 |       3155 |       0 |    0 |   5550 |      0 |      0 |    0 |          0 |
+|   dbg_hub                              |                              dbg_hub |        433 |        413 |      20 |    0 |    741 |      0 |      0 |    0 |          0 |
+|     inst                               |           dbg_hub_xsdbm_v3_0_6_xsdbm |        433 |        413 |      20 |    0 |    741 |      0 |      0 |    0 |          0 |
+|   u_batch_gray_cdc                     | xpm_cdc_array_single__parameterized1 |          0 |          0 |       0 |    0 |     64 |      0 |      0 |    0 |          0 |
+|   u_job_bus_cdc                        | xpm_cdc_array_single__parameterized0 |          0 |          0 |       0 |    0 |   1264 |      0 |      0 |    0 |          0 |
+|   u_vio                                |                                vio_0 |       1349 |       1349 |       0 |    0 |   3768 |      0 |      0 |    0 |          0 |
+|     inst                               |                vio_0_vio_v3_0_28_vio |       1349 |       1349 |       0 |    0 |   3768 |      0 |      0 |    0 |          0 |
++----------------------------------------+--------------------------------------+------------+------------+---------+------+--------+--------+--------+------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+

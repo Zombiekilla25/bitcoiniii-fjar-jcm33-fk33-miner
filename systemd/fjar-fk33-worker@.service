@@ -1,0 +1,24 @@
+[Unit]
+Description=FJAR FK33 Vivado/VIO worker %i
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/fk33-fjar-miner/miner.env
+WorkingDirectory=-%h/.local/state/fk33-fjar-miner/%i
+ExecStartPre=/usr/bin/mkdir -p %h/.local/state/fk33-fjar-miner/%i
+ExecStartPre=/usr/bin/rm -f %h/.local/state/fk33-fjar-miner/%i/job.txt %h/.local/state/fk33-fjar-miner/%i/candidate.txt %h/.local/state/fk33-fjar-miner/%i/vio_status.txt
+ExecStart=/bin/bash -c 'exec "$$VIVADO_BIN" -mode batch -nojournal -nolog -source "%h/.local/share/fk33-fjar-miner/current/runtime/vio_worker_fjar_fk33.tcl" -tclargs "%i" "%h/.local/state/fk33-fjar-miner/%i"'
+StandardOutput=append:%h/.local/state/fk33-fjar-miner/%i/worker.log
+StandardError=append:%h/.local/state/fk33-fjar-miner/%i/worker.log
+Restart=always
+RestartSec=15
+KillMode=control-group
+TimeoutStopSec=45
+UMask=0077
+
+[Install]
+WantedBy=default.target

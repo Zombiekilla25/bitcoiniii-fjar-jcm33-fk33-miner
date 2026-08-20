@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.log
+*.jou
+*.str
+*.dcp
+.Xil/
+hardware/source/bc3_80pipe_token3_350_margin/
+hardware/source/bc3_80pipe_token3_350_margin_elab/
+hardware/source/sim_token3_cycles/
+job.txt
+candidate.txt
+vio_status.txt
