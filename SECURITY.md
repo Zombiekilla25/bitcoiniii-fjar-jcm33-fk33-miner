@@ -15,17 +15,20 @@ failed verification.
 
 ## Network access
 
-The Python bridge opens a TCP connection only to the configured Stratum host and
-port. The default is `stratum.pythonpool.dev:3358`. The Vivado worker connects to
-the local AMD/Xilinx hardware server. Review the source and service files before
-running them.
+The Python bridge connects to the configured Stratum host and to a TCP port
+exposed by the operator-supplied SQRL raw-JTAG bridge. The default pool is
+`stratum.pythonpool.dev:3358`. The bridge used for validation bound its TCP
+listener to `0.0.0.0`, not only loopback. Do not expose the configured hardware
+ports to untrusted networks; use the host firewall or an isolated mining LAN.
+Review both service files before running them.
 
 ## Hardware isolation
 
-Every worker selects an exact FK33 serial and refuses ambiguous target matches.
-Do not run two workers against the same serial. Stop mining immediately if logs
-show an FPGA/Python digest mismatch, repeated target-comparator disagreement, or
-persistent pool rejects.
+Every SQRL service selects an exact FK33 serial and refuses ambiguous USB
+matches. Each card uses a private working directory and a unique configured TCP
+port. Do not run two services against the same serial. Stop immediately if logs
+show an FPGA/Python digest mismatch, repeated target-comparator disagreement,
+or persistent pool rejects.
 
 ## Reporting a vulnerability
 

@@ -1,79 +1,75 @@
 # FK33 FJAR Miner
 
-Open-source SHA3-256T FPGA mining software for the SQRL Forest Kitten 33
-(Xilinx/AMD Virtex UltraScale+ XCVU33P). This beta contains the complete RTL,
-Vivado build flow, a timing-clean 350 MHz bitstream, a VIO hardware worker, a
-Stratum v1 bridge for FJARCODE, monitoring tools, tests, and user-level systemd
-services.
+Standalone SHA3-256T FPGA mining software for the SQRL Forest Kitten 33
+(Xilinx/AMD Virtex UltraScale+ XCVU33P). End users run a prebuilt bitstream,
+the SQRL raw-JTAG transport, and Python 3. Vivado is not required on the mining
+host.
 
 ## Release status
 
-`v0.1.0-beta` is a hardware-tested public beta, not a guaranteed-profit product.
+`v0.2.0-beta` is a hardware-tested public beta.
 
 - Target: SQRL FK33 / `xcvu33p-fsvh2104-2-e`
 - Hash clock: 350 MHz
-- Architecture: 80 pipes, three active TOKEN3 contexts per nonce stride
-- Routed timing: WNS `+0.024 ns`, WHS `+0.006 ns`
-- Routing: 641,542/641,542 routable nets completed, zero routing errors
-- Short validation run: 405.12 M nonce-space/s, approximately 379.80 MH/s of
-  effective work after the `240/256` architecture factor
-- Captured pool validation: 65 accepted shares and zero rejects before the
-  service handoff; accepted shares resumed after the systemd restart
+- Architecture: 80 pipes with three active TOKEN3 contexts
+- Routed timing: WNS `+0.031 ns`, TNS `0.000 ns`
+- Routing: 642,228 fully routed nets, zero routing errors
+- Utilization: 262,934 CLB LUTs (59.80%), 529,955 registers (60.27%)
+- Physical protocol test: 117-byte job frame in, 45-byte share frame out
+- Pool validation: matching FPGA/Python SHA3-256T digests and accepted FJAR
+  shares through the standalone transport
 
-Pool hashrate estimates require time to settle and are the preferred long-window
-performance measurement. Results vary with board revision, cooling, power,
-Vivado/hw_server latency, network latency, and pool difficulty.
+This is experimental hardware software, not a guaranteed-profit product.
 
-## Important safety notice
+## What changed from v0.1
 
-Programming an FPGA replaces its active configuration. Verify the exact USB/JTAG
-serial before starting. Stop any other Vivado worker controlling the same card.
-The supplied bitstream is only for the FK33 XCVU33P target. Use is at your own
-risk; see [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
+The v0.1 runtime used Vivado hardware manager and VIO continuously. This
+release replaces that runtime with a framed BSCAN transport. Vivado is now
+needed only by developers rebuilding the bitstream from RTL.
+
+## Safety
+
+Programming an FPGA replaces its active configuration. Confirm the exact USB
+serial and stop any other process controlling that card. The supplied image is
+only for an FK33 XCVU33P. Sustained 350 MHz operation requires suitable power
+and cooling. Use is at your own risk.
 
 ## Developer fee
 
-This miner contains a visible 1% time-based developer fee:
+The Python bridge contains a visible 1% time-based developer fee: 5,940 seconds
+for the operator followed by 60 seconds for the developer in each phase-shifted
+6,000-second cycle. Logs label activity as `[USER]` or `[DEVFEE]`.
 
-- 5,940 seconds mining to the operator wallet
-- 60 seconds mining to the developer wallet
-- one 100-minute cycle, phase-distributed per card
-- explicit `[USER]`, `[DEVFEE]`, and wallet-rotation log entries
-
-The developer wallet is:
+Developer wallet:
 
 ```text
 fjarcode:qq5daj4gl6q7t7hpwm2e5vu84gn4p3h7huu4h64z9l
 ```
 
-Because the default pool mode is solo mining, a block found during the developer
-window belongs entirely to the developer wallet. Over a long period, the
-expected allocation is 1%. Read [docs/DEV_FEE.md](docs/DEV_FEE.md) before use.
+On a solo pool, a block found during the developer window belongs entirely to
+the developer wallet. Read [docs/DEV_FEE.md](docs/DEV_FEE.md).
 
-## Requirements
+## Runtime requirements
 
 - Ubuntu 24.04 x86-64 was used for validation
 - SQRL FK33 with XCVU33P FPGA
-- Vivado 2026.1 with hardware-manager support and a valid license
-- Python 3.10 or newer; no third-party Python packages
-- `systemd --user`, `flock`, and standard GNU userland tools
-- A lowercase FJARCODE payout address; never provide a private key or passphrase
+- Python 3.10 or newer
+- `systemd --user`, `flock`, `ss`, and standard GNU tools
+- a lowercase public FJARCODE payout address
+- a legally obtained `sqrl_bridge_rawjtag_coe` executable
+- any compatibility libraries required by that executable
+- firewall protection for its hardware TCP port on untrusted networks
 
-Other versions may work but are not part of this beta's tested configuration.
+The SQRL executable and legacy ABI libraries are **not distributed in this
+repository**. See [THIRD_PARTY.md](THIRD_PARTY.md).
 
-## Verify the release
-
-From the extracted release directory:
+## Verify
 
 ```bash
 ./verify-release.sh
 ```
 
-The verifier checks the manifest, Python syntax and tests, shell syntax, Tcl
-completeness, systemd-unit syntax when supported, the embedded developer wallet,
-and the absence of known private machine identifiers.
-
-## Find an FK33 serial
+## Find card serials
 
 ```bash
 for SERIAL_FILE in /sys/bus/usb/devices/*/serial; do
@@ -87,78 +83,57 @@ done
 
 ## Install one card
 
-Installation alone does not program hardware unless `--start` is supplied.
+Installation does not touch hardware unless `--start` is included.
 
 ```bash
 ./install.sh \
   --wallet 'fjarcode:YOUR_LOWERCASE_ADDRESS' \
-  --serial 'YOUR_FK_SERIAL'
+  --serial 'YOUR_FK_SERIAL' \
+  --sqrl-bridge '/path/to/sqrl_bridge_rawjtag_coe' \
+  --compat-libs '/path/to/compat_libs' \
+  --hw-port 22000
 ```
 
-Review the generated configuration:
+Review the generated files:
 
 ```bash
 sed -n '1,120p' "$HOME/.config/fk33-fjar-miner/miner.env"
+sed -n '1,120p' "$HOME/.config/fk33-fjar-miner/cards/YOUR_FK_SERIAL.env"
 ```
 
-Then start the selected card:
+Then start:
 
 ```bash
-systemctl --user enable --now \
-  fjar-fk33-worker@YOUR_FK_SERIAL.service
-
-systemctl --user enable --now \
-  fjar-fk33-bridge@YOUR_FK_SERIAL.service
+./start-card.sh YOUR_FK_SERIAL
 ```
 
-Alternatively, add `--start` to the installer after reviewing the fee policy and
-confirming the serial.
+For another card on the same host, run the installer again with a different
+serial and unused `--hw-port`, such as 22001.
 
-## Monitor
-
-```bash
-systemctl --user --no-pager --full status \
-  fjar-fk33-worker@YOUR_FK_SERIAL.service \
-  fjar-fk33-bridge@YOUR_FK_SERIAL.service
-
-tail -f "$HOME/.local/state/fk33-fjar-miner/YOUR_FK_SERIAL/bridge.log"
-
-python3 "$HOME/.local/share/fk33-fjar-miner/current/runtime/fleet_status.py"
-```
-
-Accepted share lines include either `[ACCEPTED][USER]` or
-`[ACCEPTED][DEVFEE]`. Persistent rejects or FPGA/Python digest mismatches require
-investigation; stop the card rather than continuing blindly.
-
-## Stop one card
+## Monitor and stop
 
 ```bash
+./status-card.sh YOUR_FK_SERIAL
 ./disable-card.sh YOUR_FK_SERIAL
 ```
 
-The command retains configuration, logs, and release files.
+Persistent `MISMATCH`, comparator-disagreement, or rejected-share messages are
+a stop condition.
 
 ## Build from RTL
 
-See [docs/BUILD.md](docs/BUILD.md). The internal project/output filenames retain
-their original `bc3_...` names to preserve the exact hardware-tested build flow;
-SHA3-256T header and hashing behavior are shared by the supported FJAR path.
+Developers can rebuild the prebuilt image with Vivado 2026.1. End users do not
+perform this step. See [docs/BUILD.md](docs/BUILD.md).
 
 ## Contents
 
-- `hardware/source/` — SystemVerilog, constraints, simulation, and Vivado flow
-- `hardware/prebuilt/` — tested bitstream and VIO probes
-- `hardware/reports/` — routed timing, utilization, and route evidence
-- `runtime/fjar_bridge.py` — Stratum bridge and transparent fee scheduler
-- `runtime/vio_worker_fjar_fk33.tcl` — exact-serial programmer and mailbox worker
-- `runtime/fleet_status.py` — dynamic single/fleet status monitor
-- `systemd/` — user service templates and configuration example
-- `tests/` — offline scheduler and submission-routing tests
-- `docs/` — build, fee, service, and security details
+- `hardware/source/` — SystemVerilog, constraints, probe, and build flow
+- `hardware/prebuilt/` — tested standalone mining bitstream
+- `hardware/reports/` — route, timing, and utilization evidence
+- `runtime/fjar_bridge.py` — framed transport, Stratum, validation, and fee
+- `systemd/` — per-card standalone service templates
+- `tests/` — offline protocol and scheduling tests
+- `docs/` — build, fee, systemd, and validation documentation
 
-## Wallet and pool boundaries
-
-The miner only needs a public payout address. It does not need wallet files,
-seed phrases, private keys, RPC passwords, or wallet passphrases. The default
-pool profile is PythonPool's FJAR Stratum v1 endpoint. Pool availability, rules,
-fees, and coin economics can change; verify them independently before mining.
+The miner requires only a public payout address. Never provide a private key,
+seed phrase, wallet backup, passphrase, exchange password, or RPC credential.

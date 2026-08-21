@@ -1,0 +1,25 @@
+[Unit]
+Description=Standalone FJARCODE miner for FK33 %i
+Wants=network-online.target
+Requires=fk33-sqrl-bridge@%i.service
+After=network-online.target fk33-sqrl-bridge@%i.service
+BindsTo=fk33-sqrl-bridge@%i.service
+
+[Service]
+Type=simple
+Environment=FJAR_SERIAL=%i
+Environment=FJAR_HW_HOST=127.0.0.1
+EnvironmentFile=%h/.config/fk33-fjar-miner/miner.env
+EnvironmentFile=%h/.config/fk33-fjar-miner/cards/%i.env
+ExecStartPre=/bin/bash -c 'for attempt in {1..180}; do /usr/bin/ss -ltnH | /usr/bin/grep -Eq ":${FJAR_HW_PORT}[[:space:]]" && exit 0; sleep 1; done; exit 1'
+ExecStart=/usr/bin/python3 -u %h/.local/share/fk33-fjar-miner/current/runtime/fjar_bridge.py
+WorkingDirectory=%h/.local/state/fk33-fjar-miner/%i
+StandardOutput=append:%h/.local/state/fk33-fjar-miner/%i/miner.log
+StandardError=append:%h/.local/state/fk33-fjar-miner/%i/miner.log
+Restart=always
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

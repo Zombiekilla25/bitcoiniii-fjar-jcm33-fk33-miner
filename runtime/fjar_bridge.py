@@ -1,5 +1,6 @@
 """FJARCODE SHA3-256T pool bridge for the SQRL FK33 FPGA miner."""
 
+import binascii
 import hashlib
 import json
 import os
@@ -8,20 +9,21 @@ import socket
 import struct
 import time
 
-# Use colors only in an interactive terminal. Systemd log files remain plain.
-USE_COLOR = os.isatty(1) and "NO_COLOR" not in os.environ
-GREEN = '\033[92m' if USE_COLOR else ''
-RED = '\033[91m' if USE_COLOR else ''
-YELLOW = '\033[93m' if USE_COLOR else ''
-CYAN = '\033[96m' if USE_COLOR else ''
-RESET = '\033[0m' if USE_COLOR else ''
+# Terminal colors
+GREEN = '\033[92m'
+RED = '\033[91m'
+YELLOW = '\033[93m'
+CYAN = '\033[96m'
+RESET = '\033[0m'
 
 
 HOST = os.environ.get("FJAR_POOL_HOST", "stratum.pythonpool.dev")
 PORT = int(os.environ.get("FJAR_POOL_PORT", "3358"))
 USER_WALLET = os.environ.get("FJAR_WALLET", "").strip()
 WORKER = os.environ.get("FJAR_WORKER", "fk33").strip()
-SERIAL = os.environ.get("FJAR_SERIAL", "UNKNOWN").strip()
+SERIAL = os.environ.get("FJAR_SERIAL", os.environ.get("BC3_SERIAL", "UNKNOWN"))
+HW_HOST = os.environ.get("FJAR_HW_HOST", "127.0.0.1")
+HW_PORT = int(os.environ.get("FJAR_HW_PORT", "22000"))
 
 # Transparent developer fee policy: 60 seconds of every 100-minute cycle.
 # The phase is deterministically spread by serial/worker so a multi-card fleet
@@ -41,8 +43,12 @@ _builtin_print = print
 def print(*args, **kwargs):
     _builtin_print(f"[FK {SERIAL}]", *args, **kwargs)
 
-JOB_FILE = "job.txt"
-CANDIDATE_FILE = "candidate.txt"
+FRAME_MAGIC = b"FJ"
+FRAME_VERSION = 1
+FRAME_JOB = 1
+FRAME_SHARE = 2
+JOB_PAYLOAD_BYTES = 109
+SHARE_PAYLOAD_BYTES = 37
 
 extranonce1 = None
 extranonce2_size = None
@@ -56,6 +62,167 @@ pending_submits = {}
 
 class WalletRotation(Exception):
     pass
+
+
+class HardwareDisconnected(RuntimeError):
+    pass
+
+
+def crc16(payload):
+    """CRC-16/CCITT-FALSE, matching fk33_bscan_transport.sv."""
+    return binascii.crc_hqx(payload, 0xffff)
+
+
+def encode_frame(frame_type, payload):
+    if len(payload) > 0xffff:
+        raise ValueError("hardware frame payload is too large")
+    header = (
+        FRAME_MAGIC
+        + bytes((FRAME_VERSION, frame_type))
+        + len(payload).to_bytes(2, "little")
+    )
+    return header + payload + crc16(payload).to_bytes(2, "little")
+
+
+class HardwareTransport:
+    """Persistent TCP connection to sqrl_bridge_rawjtag_coe."""
+
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.sock = None
+        self.buffer = bytearray()
+
+    def close(self):
+        if self.sock is not None:
+            try:
+                self.sock.close()
+            finally:
+                self.sock = None
+                self.buffer.clear()
+
+    def connect(self):
+        self.close()
+        sock = socket.create_connection((self.host, self.port), timeout=15)
+        sock.setblocking(False)
+        self.sock = sock
+        print(f"[*] hardware transport connected to {self.host}:{self.port}")
+
+    def ensure_connected(self):
+        if self.sock is None:
+            self.connect()
+
+    def send_job(self, job):
+        self.ensure_connected()
+        payload = (
+            bytes((job["tag"],))
+            + job["prefix"]
+            + job["target"].to_bytes(32, "little")
+        )
+        if len(payload) != JOB_PAYLOAD_BYTES:
+            raise RuntimeError(
+                f"internal job payload length {len(payload)} != "
+                f"{JOB_PAYLOAD_BYTES}"
+            )
+        try:
+            self.sock.settimeout(15)
+            self.sock.sendall(encode_frame(FRAME_JOB, payload))
+        except (BrokenPipeError, ConnectionError, OSError) as error:
+            self.close()
+            raise HardwareDisconnected(
+                f"hardware job write failed: {error}"
+            ) from error
+        finally:
+            if self.sock is not None:
+                self.sock.setblocking(False)
+
+    def _read_available(self):
+        self.ensure_connected()
+        while True:
+            try:
+                chunk = self.sock.recv(4096)
+            except BlockingIOError:
+                return
+            except (ConnectionError, OSError) as error:
+                self.close()
+                raise HardwareDisconnected(
+                    f"hardware read failed: {error}"
+                ) from error
+
+            if not chunk:
+                self.close()
+                raise HardwareDisconnected("hardware bridge disconnected")
+            self.buffer.extend(chunk)
+
+    def _pop_frame(self):
+        while True:
+            magic_index = self.buffer.find(FRAME_MAGIC)
+            if magic_index < 0:
+                # Retain a trailing possible first magic byte.
+                if self.buffer[-1:] == FRAME_MAGIC[:1]:
+                    del self.buffer[:-1]
+                else:
+                    self.buffer.clear()
+                return None
+
+            if magic_index:
+                del self.buffer[:magic_index]
+
+            if len(self.buffer) < 6:
+                return None
+
+            version = self.buffer[2]
+            frame_type = self.buffer[3]
+            payload_length = int.from_bytes(self.buffer[4:6], "little")
+
+            if version != FRAME_VERSION or payload_length > 4096:
+                del self.buffer[0]
+                continue
+
+            frame_length = 6 + payload_length + 2
+            if len(self.buffer) < frame_length:
+                return None
+
+            payload = bytes(self.buffer[6:6 + payload_length])
+            received_crc = int.from_bytes(
+                self.buffer[6 + payload_length:frame_length],
+                "little",
+            )
+            del self.buffer[:frame_length]
+
+            calculated_crc = crc16(payload)
+            if received_crc != calculated_crc:
+                print(
+                    f"[!] hardware frame CRC mismatch "
+                    f"received={received_crc:04x} "
+                    f"calculated={calculated_crc:04x}"
+                )
+                continue
+
+            return frame_type, payload
+
+    def pop_share(self):
+        self._read_available()
+        while True:
+            frame = self._pop_frame()
+            if frame is None:
+                return None
+
+            frame_type, payload = frame
+            if frame_type != FRAME_SHARE:
+                print(f"[.] ignored hardware frame type={frame_type}")
+                continue
+            if len(payload) != SHARE_PAYLOAD_BYTES:
+                print(
+                    f"[!] ignored malformed share payload "
+                    f"length={len(payload)}"
+                )
+                continue
+
+            tag = payload[0]
+            nonce = int.from_bytes(payload[1:5], "little")
+            digest = payload[5:37].hex()
+            return tag, nonce, digest
 
 
 class DevFeeSchedule:
@@ -97,8 +264,6 @@ class DevFeeSchedule:
 
 
 def validate_configuration():
-    if not HOST or any(character.isspace() for character in HOST):
-        raise ValueError("FJAR_POOL_HOST must be a non-empty hostname")
     if not ADDRESS_RE.fullmatch(USER_WALLET):
         raise ValueError(
             "FJAR_WALLET is required and must be a lowercase fjarcode: address"
@@ -111,6 +276,8 @@ def validate_configuration():
         )
     if not 1 <= PORT <= 65535:
         raise ValueError("FJAR_POOL_PORT must be between 1 and 65535")
+    if not 1 <= HW_PORT <= 65535:
+        raise ValueError("FJAR_HW_PORT must be between 1 and 65535")
 
 
 def wallet_for_mode(mode):
@@ -131,21 +298,6 @@ def diff1_target():
 
 def share_target(diff):
     return int(diff1_target() / max(diff, 1e-30))
-
-def split_prefix(prefix):
-    assert len(prefix) == 76
-    v = int.from_bytes(prefix, "little")
-    return (
-        f"{v & ((1<<256)-1):064x}",
-        f"{(v >> 256) & ((1<<256)-1):064x}",
-        f"{(v >> 512) & ((1<<96)-1):024x}"
-    )
-
-def atomic_write(path, text):
-    tmp = path + ".tmp"
-    with open(tmp, "w") as f:
-        f.write(text)
-    os.replace(tmp, path)
 
 def build_job(params, active_wallet, fee_mode):
     global tag_counter
@@ -192,32 +344,12 @@ def build_job(params, active_wallet, fee_mode):
     jobs[tag_counter] = job
     return job
 
-def dispatch_job(job):
-    p0, p1, p2 = split_prefix(job["prefix"])
-    atomic_write(
-        JOB_FILE,
-        f"{job['tag']:02x}\n"
-        f"{p0}\n"
-        f"{p1}\n"
-        f"{p2}\n"
-        f"{job['target']:064x}\n"
-    )
+def dispatch_job(hardware, job):
+    hardware.send_job(job)
     print(
         f"[>] FPGA job tag={job['tag']:02x} "
         f"id={job['job_id']} target={job['target']:064x}"
     )
-
-def pop_share():
-    try:
-        with open(CANDIDATE_FILE, "r") as f:
-            line = f.read().strip()
-        if not line:
-            return None
-        os.remove(CANDIDATE_FILE)
-        tag_s, nonce_s, digest = line.split(":")
-        return int(tag_s, 16), int(nonce_s, 16), digest.lower()
-    except FileNotFoundError:
-        return None
 
 def submit(sock, job, nonce):
     global submit_id
@@ -250,8 +382,8 @@ def submit(sock, job, nonce):
         f"nonce={nonce_hex} job={job['job_id']}{RESET}"
     )
 
-def check_share(sock):
-    c = pop_share()
+def check_share(sock, hardware):
+    c = hardware.pop_share()
     if not c:
         return
 
@@ -296,7 +428,7 @@ def check_share(sock):
     else:
         print("[!] FPGA target comparator disagreement — NOT submitting")
 
-def run_session(active_wallet, fee_mode, schedule):
+def run_session(active_wallet, fee_mode, schedule, hardware):
     global extranonce1, extranonce2_size, difficulty
 
     extranonce1 = None
@@ -305,10 +437,6 @@ def run_session(active_wallet, fee_mode, schedule):
     jobs.clear()
     submitted_shares.clear()
     pending_submits.clear()
-
-    for p in [JOB_FILE, CANDIDATE_FILE]:
-        try: os.remove(p)
-        except FileNotFoundError: pass
 
     username = f"{active_wallet}.{WORKER}"
 
@@ -342,7 +470,7 @@ def run_session(active_wallet, fee_mode, schedule):
             if new_mode != fee_mode:
                 raise WalletRotation(f"{fee_mode} -> {new_mode}")
 
-            check_share(sock)
+            check_share(sock, hardware)
 
             try:
                 data = sock.recv(4096)
@@ -387,6 +515,7 @@ def run_session(active_wallet, fee_mode, schedule):
                     and extranonce1 is not None
                 ):
                     dispatch_job(
+                        hardware,
                         build_job(msg["params"], active_wallet, fee_mode)
                     )
 
@@ -410,6 +539,7 @@ def run_session(active_wallet, fee_mode, schedule):
 def main():
     validate_configuration()
     schedule = DevFeeSchedule(f"{SERIAL}|{WORKER}")
+    hardware = HardwareTransport(HW_HOST, HW_PORT)
     effective_fee = 100.0 * schedule.dev_seconds / schedule.cycle_seconds
 
     print(
@@ -423,12 +553,14 @@ def main():
         fee_mode = schedule.mode_at(time.time())
         active_wallet = wallet_for_mode(fee_mode)
         try:
-            run_session(active_wallet, fee_mode, schedule)
+            run_session(active_wallet, fee_mode, schedule, hardware)
         except KeyboardInterrupt:
             raise
         except WalletRotation as rotation:
             print(f"[DEVFEE] wallet rotation {rotation}; reconnecting")
         except Exception as error:
+            if isinstance(error, HardwareDisconnected):
+                hardware.close()
             print("[-]", error, "reconnecting in 3s")
             time.sleep(3)
 

@@ -1,26 +1,21 @@
 # Notices
 
-## Scope of the MIT license
+The project-authored source and documentation are offered under the MIT
+license. The generated bitstream and reports may also be subject to applicable
+AMD/Xilinx tool and IP terms. Users and redistributors are responsible for
+checking those terms.
 
-The repository's project-authored source code and documentation are offered
-under the MIT license. The prebuilt bitstream, debug-probe metadata, generated
-reports, and generated results involving AMD/Xilinx Vivado or AMD/Xilinx IP may
-also be subject to the applicable AMD/Xilinx tool and IP terms. Users and
-redistributors are responsible for verifying that their use complies with
-those terms.
+AMD, Xilinx, Virtex, Vivado, SQRL, Forest Kitten, FJARCODE, and PythonPool may
+be trademarks of their respective owners. This is not an official release of
+those parties.
 
-AMD, Xilinx, Virtex, Vivado, SQRL, Forest Kitten, FJARCODE, PythonPool, and
-other names may be trademarks of their respective owners. This project is not
-presented as an official release of those parties.
-
-## Experimental hardware
+The SQRL raw-JTAG executable and copied legacy ncurses/tinfo libraries used in
+hardware validation are not included or licensed by this repository. See
+[THIRD_PARTY.md](THIRD_PARTY.md).
 
 FPGA programming and sustained high-clock operation can expose unstable power,
-cooling, timing, or board-specific behavior. No warranty of fitness, uptime,
-profitability, or hardware safety is provided.
+cooling, timing, or board behavior. No warranty of hardware safety, uptime,
+profitability, or fitness is provided.
 
-## Developer fee
-
-The runtime contains a disclosed 1% time-based developer fee. Its address,
-schedule, and implementation are public in `runtime/fjar_bridge.py` and
-documented in `docs/DEV_FEE.md`.
+The runtime contains a disclosed 1% time-based developer fee, documented in
+`docs/DEV_FEE.md` and implemented in `runtime/fjar_bridge.py`.

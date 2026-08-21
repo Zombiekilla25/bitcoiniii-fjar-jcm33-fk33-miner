@@ -63,38 +63,38 @@ module miner_top_80pipe_token3_350_margin(
     end
 
     // ============================================================
-    // 200 MHz VIO/control island.
+    // 200 MHz standalone BSCAN/control island.
     // ============================================================
-    wire [255:0] vio_header0;
-    wire [255:0] vio_header1;
-    wire [95:0]  vio_header2;
-    wire [255:0] vio_target;
-    wire [9:0]   vio_control;
+    wire [607:0] bscan_job_header;
+    wire [255:0] bscan_job_target;
+    wire [7:0] bscan_job_tag;
+    wire bscan_job_pulse;
+    wire bscan_share_ready;
 
-    logic [40:0]  vio_status_mailbox = '0;
-    logic [255:0] vio_digest_mailbox = '0;
-    logic [31:0]  vio_live_nonce = '0; // raw Gray batch counter
+    logic bscan_share_valid = 1'b0;
+    logic [7:0] bscan_share_tag = '0;
+    logic [31:0] bscan_share_nonce = '0;
+    logic [255:0] bscan_share_digest = '0;
 
-    vio_0 u_vio (
+    fk33_bscan_transport u_bscan_transport (
         .clk(clk200),
-        .probe_in0(vio_status_mailbox),
-        .probe_in1(vio_digest_mailbox),
-        .probe_in2(vio_live_nonce),
-        .probe_out0(vio_header0),
-        .probe_out1(vio_header1),
-        .probe_out2(vio_header2),
-        .probe_out3(vio_target),
-        .probe_out4(vio_control)
+        .job_header(bscan_job_header),
+        .job_target(bscan_job_target),
+        .job_tag(bscan_job_tag),
+        .job_pulse(bscan_job_pulse),
+        .share_valid(bscan_share_valid),
+        .share_tag(bscan_share_tag),
+        .share_nonce(bscan_share_nonce),
+        .share_digest(bscan_share_digest),
+        .share_ready(bscan_share_ready)
     );
 
     logic [607:0] header200 = '0;
     logic [255:0] target200 = '0;
     logic [7:0] job_tag200 = '0;
     logic job_seen200 = 1'b0;
-    logic ack_seen200 = 1'b0;
 
-    wire job_event200 = (vio_control[9] != job_seen200);
-    wire ack_event200 = (vio_control[8] != ack_seen200);
+    wire job_event200 = bscan_job_pulse;
 
     wire [871:0] job_bus200 = {job_tag200, target200, header200};
     wire [871:0] job_bus400;
@@ -356,19 +356,6 @@ module miner_top_80pipe_token3_350_margin(
         end
     endgenerate
 
-    // Progress remains Gray-coded inside the FPGA.
-    wire [31:0] batch_gray400 =
-        batch_count400 ^ (batch_count400 >> 1);
-    wire [31:0] batch_gray200;
-
-    xpm_cdc_array_single #(
-        .DEST_SYNC_FF(2), .INIT_SYNC_FF(1),
-        .SIM_ASSERT_CHK(0), .SRC_INPUT_REG(0), .WIDTH(32)
-    ) u_batch_gray_cdc (
-        .src_clk(clk400), .src_in(batch_gray400),
-        .dest_clk(clk200), .dest_out(batch_gray200)
-    );
-
     // ============================================================
     // 200 MHz full-target checker.
     // ============================================================
@@ -385,37 +372,26 @@ module miner_top_80pipe_token3_350_margin(
         (scan_result200[295:288] == job_tag200) &&
         (scan_hash_ordered <= target200);
 
-    logic share_pending200 = 1'b0;
-    logic [31:0] found_nonce200 = '0;
-    logic [255:0] found_digest200 = '0;
-    logic [7:0] found_tag200 = '0;
-
     always_ff @(posedge clk200) begin
+        bscan_share_valid <= 1'b0;
+
         if (job_event200) begin
-            header200[255:0]   <= vio_header0;
-            header200[511:256] <= vio_header1;
-            header200[607:512] <= vio_header2;
-            target200 <= vio_target;
-            job_tag200 <= vio_control[7:0];
-            job_seen200 <= vio_control[9];
+            header200 <= bscan_job_header;
+            target200 <= bscan_job_target;
+            job_tag200 <= bscan_job_tag;
+            job_seen200 <= ~job_seen200;
 
             seen_candidate_toggle200 <= candidate_toggle200;
             scan_index200 <= 7'd0;
             scan_valid200 <= 1'b0;
-            share_pending200 <= 1'b0;
         end else begin
-            if (ack_event200) begin
-                ack_seen200 <= vio_control[8];
-                share_pending200 <= 1'b0;
-            end
-
-            if (scan_pass200 && !share_pending200) begin
-                share_pending200 <= 1'b1;
-                found_tag200 <= scan_result200[295:288];
-                found_nonce200 <= scan_result200[287:256];
-                found_digest200 <= scan_result200[255:0];
+            if (scan_pass200 && bscan_share_ready) begin
+                bscan_share_tag <= scan_result200[295:288];
+                bscan_share_nonce <= scan_result200[287:256];
+                bscan_share_digest <= scan_result200[255:0];
+                bscan_share_valid <= 1'b1;
                 scan_valid200 <= 1'b0;
-            end else if (!share_pending200 || ack_event200) begin
+            end else if (!scan_pass200 && bscan_share_ready) begin
                 if (candidate_toggle200[scan_index200] !=
                     seen_candidate_toggle200[scan_index200]) begin
                     scan_result200 <= candidate_bus200[scan_index200];
@@ -430,19 +406,8 @@ module miner_top_80pipe_token3_350_margin(
                     scan_index200 <= 7'd0;
                 else
                     scan_index200 <= scan_index200 + 1'b1;
-            end else begin
-                scan_valid200 <= 1'b0;
             end
         end
-
-        // Dedicated VIO mailbox registers.
-        vio_status_mailbox <= {
-            share_pending200,
-            found_tag200,
-            found_nonce200
-        };
-        vio_digest_mailbox <= found_digest200;
-        vio_live_nonce <= batch_gray200;
     end
 
 endmodule

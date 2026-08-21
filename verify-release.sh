@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 cd "$ROOT"
@@ -7,15 +7,11 @@ cd "$ROOT"
 printf 'Verifying SHA256SUMS...\n'
 sha256sum --check SHA256SUMS
 
-printf '\nChecking Python syntax and offline tests...\n'
+printf '\nChecking Python syntax and tests...\n'
 python3 - <<'PY'
-import pathlib
+from pathlib import Path
 
-paths = [
-    pathlib.Path("runtime/fjar_bridge.py"),
-    pathlib.Path("runtime/fleet_status.py"),
-    pathlib.Path("tests/test_fjar_bridge.py"),
-]
+paths = [Path("runtime/fjar_bridge.py"), *sorted(Path("tests").glob("*.py"))]
 for path in paths:
     compile(path.read_text(), str(path), "exec")
 print(f"Python syntax passed: {len(paths)} files")
@@ -23,16 +19,14 @@ PY
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 printf '\nChecking shell syntax...\n'
-for SCRIPT in ./*.sh hardware/source/*.sh; do
-    bash -n "$SCRIPT"
+for script in ./*.sh hardware/source/*.sh; do
+    bash -n "$script"
 done
 
 printf '\nChecking Tcl completeness...\n'
 if command -v tclsh >/dev/null 2>&1; then
     tclsh <<'TCL'
-set files [concat \
-    [glob -nocomplain hardware/source/*.tcl] \
-    [glob -nocomplain runtime/*.tcl]]
+set files [glob -nocomplain hardware/source/*.tcl]
 foreach file $files {
     set channel [open $file r]
     set source [read $channel]
@@ -44,36 +38,18 @@ foreach file $files {
 }
 puts "Tcl files complete: [llength $files]"
 TCL
-else
-    python3 - <<'PY'
-import pathlib
-
-try:
-    import tkinter
-except ImportError:
-    print("SKIP: neither tclsh nor Python tkinter is available.")
-    raise SystemExit(0)
-
-interp = tkinter.Tcl()
-files = sorted(pathlib.Path("hardware/source").glob("*.tcl"))
-files += sorted(pathlib.Path("runtime").glob("*.tcl"))
-for path in files:
-    if interp.call("info", "complete", path.read_text()) != 1:
-        raise SystemExit(f"Incomplete Tcl syntax: {path}")
-print(f"Tcl files complete: {len(files)}")
-PY
 fi
 
 printf '\nChecking systemd unit syntax...\n'
 if command -v systemd-analyze >/dev/null 2>&1; then
     systemd-analyze verify \
-        systemd/fjar-fk33-worker@.service \
-        systemd/fjar-fk33-bridge@.service
+        systemd/fk33-sqrl-bridge@.service \
+        systemd/fjar-fk33-standalone@.service
 else
     printf 'SKIP: systemd-analyze is unavailable.\n'
 fi
 
-printf '\nChecking release configuration invariants...\n'
+printf '\nChecking release invariants...\n'
 grep -Fq \
     'USER_WALLET = os.environ.get("FJAR_WALLET", "").strip()' \
     runtime/fjar_bridge.py
@@ -87,16 +63,25 @@ if [[ "$EMBEDDED_ADDRESSES" != "$EXPECTED_DEV_WALLET" ]]; then
     exit 1
 fi
 
-test -s hardware/prebuilt/fk33_fjar_80pipe_token3_350mhz.bit
-test -s hardware/prebuilt/fk33_fjar_80pipe_token3_350mhz.ltx
+test -s hardware/prebuilt/fk33_fjar_bscan_350.bit
+grep -Fq 'COMPRESS=FALSE' <(file hardware/prebuilt/fk33_fjar_bscan_350.bit)
+grep -Fq 'All user specified timing constraints are met.' \
+    hardware/reports/fk33_fjar_bscan_350_timing.rpt
+grep -Eq '# of nets with routing errors[^:]*:[[:space:]]+0' \
+    hardware/reports/fk33_fjar_bscan_350_route_status.rpt
 
-printf '\nChecking known private identifiers...\n'
+if find . -path './.git' -prune -o -type f \
+    \( -name 'sqrl_bridge*' -o -name 'libncurses.so*' -o -name 'libtinfo.so*' \) \
+    -print | grep .; then
+    printf 'Third-party runtime files must not be distributed.\n' >&2
+    exit 1
+fi
+
+printf '\nChecking private identifiers...\n'
 if grep -RInE \
-    'rmann|Host[[:space:]]*:[[:space:]]*RGB|153300001064|153300000286|153300000354|153300000267|153300000731|bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu' \
-    . \
-    --binary-files=without-match \
-    --exclude=SHA256SUMS \
-    --exclude=verify-release.sh; then
+    'rmann|Host[[:space:]]*:[[:space:]]*RGB|153300000[0-9]{3}|153300001064|bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu' \
+    . --binary-files=without-match --exclude-dir=.git \
+    --exclude=SHA256SUMS --exclude=verify-release.sh; then
     printf 'Private identifier audit failed.\n' >&2
     exit 1
 fi

@@ -1,63 +1,52 @@
-# Hardware build
+# Developer bitstream build
 
-## Tested toolchain
+End users use `hardware/prebuilt/fk33_fjar_bscan_350.bit` and do not need
+Vivado.
 
-- Vivado 2026.1, 64-bit Linux
-- Target part `xcvu33p-fsvh2104-2-e`
-- Ubuntu 24.04 x86-64
+The validated developer toolchain was Vivado 2026.1 on Ubuntu 24.04 x86-64,
+targeting `xcvu33p-fsvh2104-2-e`.
 
-Vivado and its license are not included.
+## Offline tests
 
-## Build
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
+```
+
+## Protocol probe
 
 ```bash
 cd hardware/source
-chmod +x run_build_350_margin.sh
-VIVADO_BIN="$HOME/Xilinx/2026.1/Vivado/bin/vivado" \
-  ./run_build_350_margin.sh
+./run_probe_build.sh
 ```
 
-The script performs the three-context simulation, synthesis, placement,
-physical optimization, routing, timing gates, bitstream generation, and debug
-probe export. It refuses bitstream generation when setup or hold slack is
-negative.
+Require the physical probe to report a complete 117-byte input frame and a
+correct 45-byte output frame before building the miner.
 
-The verified build flow retains its internal output names:
-
-```text
-bc3_80pipe_token3_350_margin.bit
-bc3_80pipe_token3_350_margin.ltx
-```
-
-For the release runtime, copy successful outputs to:
+## Full image
 
 ```bash
-cp -p bc3_80pipe_token3_350_margin.bit \
-  ../prebuilt/fk33_fjar_80pipe_token3_350mhz.bit
-
-cp -p bc3_80pipe_token3_350_margin.ltx \
-  ../prebuilt/fk33_fjar_80pipe_token3_350mhz.ltx
+cd hardware/source
+./run_build.sh
 ```
 
-Regenerate `SHA256SUMS` before distributing a rebuilt release.
+Expected output:
 
-## Verified routed result
+```text
+FK33 FJAR BSCAN BUILD COMPLETE
+```
 
-- 350.000 MHz generated hash clock
-- WNS `+0.024 ns`
-- TNS `0.000 ns`
-- WHS `+0.006 ns`
-- THS `0.000 ns`
-- zero timing-failing endpoints
-- zero routing errors
-- CLB LUT utilization: 263,212 / 439,680 (`59.86%`)
-- CLB register utilization: 530,114 / 879,360 (`60.28%`)
+The generated file is `fk33_fjar_bscan_350.bit`. Require zero route errors and
+positive setup timing before copying it into `hardware/prebuilt/` and
+regenerating `SHA256SUMS`.
 
-The full generated reports are under `hardware/reports/`.
+## Validated routed result
 
-## Programming warning
-
-Vivado can report that the bitstream was generated for the ES1 target while a
-revision-0 device is compatible with ES1 bitstreams. That warning was observed
-during the successful validation run. Do not treat unrelated part or IDCODE
-mismatches as benign.
+- Hash clock: 350.000 MHz
+- WNS: `+0.031 ns`
+- TNS: `0.000 ns`
+- Timing-failing endpoints: 0
+- Fully routed nets: 642,228
+- Routing errors: 0
+- CLB LUTs: 262,934 / 439,680 (59.80%)
+- CLB registers: 529,955 / 879,360 (60.27%)
+- Bitstream compression: disabled for legacy SQRL-loader compatibility
