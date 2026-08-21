@@ -7,9 +7,5 @@ if [[ ! "$SERIAL" =~ ^[0-9]{6,32}$ ]]; then
     exit 2
 fi
 
-systemctl --user disable --now \
-    "fjar-fk33-standalone@$SERIAL.service" || true
-systemctl --user disable --now \
-    "fk33-sqrl-bridge@$SERIAL.service" || true
-
-printf 'Disabled FK33 %s; configuration and logs were retained.\n' "$SERIAL"
+systemctl --user disable --now "fjar-fk33-fleet@$SERIAL.service" || true
+printf 'Disabled miner %s; the shared fleet bridge remains available.\n' "$SERIAL"

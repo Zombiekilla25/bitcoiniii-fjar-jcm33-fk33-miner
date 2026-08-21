@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VERSION="0.2.0-beta"
+VERSION="0.2.1-beta"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 INSTALL_ROOT="$HOME/.local/share/fk33-fjar-miner"
 INSTALL_DIR="$INSTALL_ROOT/$VERSION"
@@ -10,41 +10,45 @@ PRIVATE_BIN="$PRIVATE_ROOT/bin"
 PRIVATE_COMPAT="$PRIVATE_ROOT/compat_libs"
 CONFIG_DIR="$HOME/.config/fk33-fjar-miner"
 CARD_CONFIG_DIR="$CONFIG_DIR/cards"
-CONFIG_FILE="$CONFIG_DIR/miner.env"
 STATE_ROOT="$HOME/.local/state/fk33-fjar-miner"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 
 WALLET=""
-SERIAL=""
-SQRL_BRIDGE=""
+SQRL_BRIDGE="$SCRIPT_DIR/third_party/sqrl/sqrl_bridge_rawjtag_coe"
 COMPAT_LIBS=""
 POOL_HOST="stratum.pythonpool.dev"
 POOL_PORT="3358"
-HW_PORT="22000"
-WORKER=""
+INSTALL_UDEV=0
+ENABLE_LINGER=0
 START_NOW=0
+CARDS=()
 
 usage() {
     cat <<'USAGE'
 Usage:
-  ./install.sh --wallet ADDRESS --serial SERIAL --sqrl-bridge PATH [options]
+  ./install.sh --wallet ADDRESS --card SERIAL:PORT [--card SERIAL:PORT ...]
+               [options]
 
 Required:
   --wallet ADDRESS       Lowercase public fjarcode: payout address
-  --serial SERIAL        Exact SQRL FK33 USB serial
-  --sqrl-bridge PATH     Legally obtained sqrl_bridge_rawjtag_coe executable
+  --card SERIAL:PORT     FK33 USB serial and its fleet TCP port; repeat per card
 
 Options:
+  --sqrl-bridge PATH     Authorized compatible bridge override
+                        (default: bundled patched SQRL bridge)
   --compat-libs DIR      Directory containing required legacy shared libraries
   --pool-host HOST       Compatible Stratum v1 host
   --pool-port PORT       Compatible Stratum v1 port
-  --hw-port PORT         Unique local SQRL TCP port (default: 22000)
-  --worker NAME          Pool worker suffix (default: fk33-SERIAL)
-  --start                Enable services and program/start the selected card
+  --install-udev         Install serial-specific USB permissions (needs sudo -n)
+  --enable-linger        Start user services before login (needs sudo -n)
+  --start                Enable and start the complete fleet after installation
   -h, --help             Show this help
 
-Every card on one host requires a different --hw-port. This miner contains a
-transparent 1% time-based developer fee; read docs/DEV_FEE.md before starting.
+Cards must be listed in the bridge's physical scan order and assigned consecutive
+ports. Example: --card SERIAL_A:22000 --card SERIAL_B:22001.
+
+The runtime contains a transparent 1% time-based developer fee. Read
+docs/DEV_FEE.md and THIRD_PARTY.md before starting.
 USAGE
 }
 
@@ -55,12 +59,16 @@ need_value() {
     fi
 }
 
+valid_port() {
+    [[ $1 =~ ^[0-9]+$ ]] && ((10#$1 >= 1 && 10#$1 <= 65535))
+}
+
 while (($#)); do
     case "$1" in
         --wallet)
             need_value "$@"; WALLET=$2; shift 2 ;;
-        --serial)
-            need_value "$@"; SERIAL=$2; shift 2 ;;
+        --card)
+            need_value "$@"; CARDS+=("$2"); shift 2 ;;
         --sqrl-bridge)
             need_value "$@"; SQRL_BRIDGE=$2; shift 2 ;;
         --compat-libs)
@@ -69,10 +77,10 @@ while (($#)); do
             need_value "$@"; POOL_HOST=$2; shift 2 ;;
         --pool-port)
             need_value "$@"; POOL_PORT=$2; shift 2 ;;
-        --hw-port)
-            need_value "$@"; HW_PORT=$2; shift 2 ;;
-        --worker)
-            need_value "$@"; WORKER=$2; shift 2 ;;
+        --install-udev)
+            INSTALL_UDEV=1; shift ;;
+        --enable-linger)
+            ENABLE_LINGER=1; shift ;;
         --start)
             START_NOW=1; shift ;;
         -h|--help)
@@ -88,29 +96,12 @@ if [[ ! "$WALLET" =~ ^fjarcode:[a-z0-9]{20,120}$ ]]; then
     printf 'Invalid or missing --wallet value.\n' >&2
     exit 2
 fi
-if [[ ! "$SERIAL" =~ ^[0-9]{6,32}$ ]]; then
-    printf 'Invalid or missing --serial value.\n' >&2
+if ((${#CARDS[@]} == 0)); then
+    printf 'At least one --card SERIAL:PORT is required.\n' >&2
     exit 2
 fi
-if [[ ! "$POOL_HOST" =~ ^[A-Za-z0-9.-]+$ ]]; then
-    printf 'Invalid --pool-host value.\n' >&2
-    exit 2
-fi
-for PORT_SPEC in "pool:$POOL_PORT" "hardware:$HW_PORT"; do
-    PORT_NAME=${PORT_SPEC%%:*}
-    PORT_VALUE=${PORT_SPEC#*:}
-    if [[ ! "$PORT_VALUE" =~ ^[0-9]+$ ]] ||
-       ((PORT_VALUE < 1 || PORT_VALUE > 65535)); then
-        printf 'Invalid %s port: %s\n' "$PORT_NAME" "$PORT_VALUE" >&2
-        exit 2
-    fi
-done
-
-if [[ -z "$WORKER" ]]; then
-    WORKER="fk33-$SERIAL"
-fi
-if [[ ! "$WORKER" =~ ^[A-Za-z0-9_-]{1,64}$ ]]; then
-    printf 'Invalid --worker value.\n' >&2
+if [[ ! "$POOL_HOST" =~ ^[A-Za-z0-9.-]+$ ]] || ! valid_port "$POOL_PORT"; then
+    printf 'Invalid pool host or port.\n' >&2
     exit 2
 fi
 if [[ ! -x "$SQRL_BRIDGE" ]]; then
@@ -122,10 +113,49 @@ if [[ -n "$COMPAT_LIBS" && ! -d "$COMPAT_LIBS" ]]; then
     exit 2
 fi
 
+SERIALS=()
+PORTS=()
+declare -A SEEN_SERIALS=()
+declare -A SEEN_PORTS=()
+
+for SPEC in "${CARDS[@]}"; do
+    if [[ ! "$SPEC" =~ ^([0-9]{6,32}):([0-9]+)$ ]]; then
+        printf 'Invalid --card value: %s (expected SERIAL:PORT)\n' "$SPEC" >&2
+        exit 2
+    fi
+
+    SERIAL=${BASH_REMATCH[1]}
+    PORT=${BASH_REMATCH[2]}
+    valid_port "$PORT" || {
+        printf 'Invalid hardware port in --card %s\n' "$SPEC" >&2
+        exit 2
+    }
+    if [[ -n ${SEEN_SERIALS[$SERIAL]:-} || -n ${SEEN_PORTS[$PORT]:-} ]]; then
+        printf 'Duplicate serial or port in --card %s\n' "$SPEC" >&2
+        exit 2
+    fi
+
+    SEEN_SERIALS[$SERIAL]=1
+    SEEN_PORTS[$PORT]=1
+    SERIALS+=("$SERIAL")
+    PORTS+=("$PORT")
+done
+
+BASE_PORT=${PORTS[0]}
+for INDEX in "${!PORTS[@]}"; do
+    EXPECTED=$((10#$BASE_PORT + INDEX))
+    if ((10#${PORTS[$INDEX]} != EXPECTED)); then
+        printf 'Fleet ports must be consecutive in card order; expected %s for %s.\n' \
+            "$EXPECTED" "${SERIALS[$INDEX]}" >&2
+        exit 2
+    fi
+done
+
 LDD_OUTPUT=$(env LD_LIBRARY_PATH="$COMPAT_LIBS" ldd "$SQRL_BRIDGE")
 if grep -q 'not found' <<<"$LDD_OUTPUT"; then
     printf 'Unresolved SQRL bridge dependencies:\n%s\n' \
         "$(grep 'not found' <<<"$LDD_OUTPUT")" >&2
+    printf 'Supply authorized ABI libraries with --compat-libs DIR.\n' >&2
     exit 2
 fi
 
@@ -133,22 +163,14 @@ fi
 
 mkdir -p \
     "$INSTALL_ROOT" "$PRIVATE_BIN" "$PRIVATE_COMPAT" \
-    "$CONFIG_DIR" "$CARD_CONFIG_DIR" \
-    "$STATE_ROOT/$SERIAL/sqrl" "$SYSTEMD_DIR"
+    "$CONFIG_DIR" "$CARD_CONFIG_DIR" "$STATE_ROOT/fleet" "$SYSTEMD_DIR"
 chmod 700 \
     "$PRIVATE_ROOT" "$PRIVATE_BIN" "$PRIVATE_COMPAT" \
-    "$CONFIG_DIR" "$CARD_CONFIG_DIR" \
-    "$STATE_ROOT" "$STATE_ROOT/$SERIAL" "$STATE_ROOT/$SERIAL/sqrl"
+    "$CONFIG_DIR" "$CARD_CONFIG_DIR" "$STATE_ROOT" "$STATE_ROOT/fleet"
 
-for CARD_FILE in "$CARD_CONFIG_DIR"/*.env; do
-    [[ -e "$CARD_FILE" ]] || continue
-    [[ $(basename "$CARD_FILE") == "$SERIAL.env" ]] && continue
-    EXISTING_PORT=$(sed -n 's/^FJAR_HW_PORT=//p' "$CARD_FILE" | tail -n 1)
-    if [[ "$EXISTING_PORT" == "$HW_PORT" ]]; then
-        printf 'Hardware port %s is already assigned in %s\n' \
-            "$HW_PORT" "$CARD_FILE" >&2
-        exit 3
-    fi
+for SERIAL in "${SERIALS[@]}"; do
+    mkdir -p "$STATE_ROOT/$SERIAL"
+    chmod 700 "$STATE_ROOT/$SERIAL"
 done
 
 if [[ -e "$INSTALL_DIR" ]]; then
@@ -158,55 +180,87 @@ else
 fi
 ln -sfn "$INSTALL_DIR" "$INSTALL_ROOT/current"
 
-PRIVATE_BRIDGE="$PRIVATE_BIN/sqrl_bridge_rawjtag_coe"
-if [[ ! -e "$PRIVATE_BRIDGE" ]] ||
-   [[ $(readlink -f "$SQRL_BRIDGE") != $(readlink -f "$PRIVATE_BRIDGE") ]]; then
-    install -m 0755 "$SQRL_BRIDGE" "$PRIVATE_BRIDGE"
-fi
+install -m 0755 "$SQRL_BRIDGE" \
+    "$PRIVATE_BIN/sqrl_bridge_rawjtag_coe"
 if [[ -n "$COMPAT_LIBS" ]] &&
    [[ $(readlink -f "$COMPAT_LIBS") != $(readlink -f "$PRIVATE_COMPAT") ]]; then
     cp -a "$COMPAT_LIBS"/. "$PRIVATE_COMPAT"/
 fi
 
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
-if [[ -e "$CONFIG_FILE" ]]; then
-    cp -p "$CONFIG_FILE" "$CONFIG_FILE.before-$STAMP"
-fi
-if [[ -e "$CARD_CONFIG_DIR/$SERIAL.env" ]]; then
-    cp -p "$CARD_CONFIG_DIR/$SERIAL.env" \
-        "$CARD_CONFIG_DIR/$SERIAL.env.before-$STAMP"
-fi
+for PATH_TO_BACK_UP in "$CONFIG_DIR/miner.env" "$CONFIG_DIR/fleet.env"; do
+    if [[ -e "$PATH_TO_BACK_UP" ]]; then
+        cp -p "$PATH_TO_BACK_UP" "$PATH_TO_BACK_UP.before-$STAMP"
+    fi
+done
 
 umask 077
 {
     printf 'FJAR_WALLET=%s\n' "$WALLET"
     printf 'FJAR_POOL_HOST=%s\n' "$POOL_HOST"
     printf 'FJAR_POOL_PORT=%s\n' "$POOL_PORT"
-} >"$CONFIG_FILE"
-{
-    printf 'FJAR_HW_PORT=%s\n' "$HW_PORT"
-    printf 'FJAR_WORKER=%s\n' "$WORKER"
-} >"$CARD_CONFIG_DIR/$SERIAL.env"
+} >"$CONFIG_DIR/miner.env"
 
-for UNIT in fk33-sqrl-bridge@.service fjar-fk33-standalone@.service; do
+SERIAL_LIST=$(IFS=,; printf '%s' "${SERIALS[*]}")
+{
+    printf 'FJAR_FLEET_SERIALS=%s\n' "$SERIAL_LIST"
+    printf 'FJAR_FLEET_BASE_PORT=%s\n' "$BASE_PORT"
+} >"$CONFIG_DIR/fleet.env"
+
+for INDEX in "${!SERIALS[@]}"; do
+    SERIAL=${SERIALS[$INDEX]}
+    {
+        printf 'FJAR_HW_PORT=%s\n' "${PORTS[$INDEX]}"
+        printf 'FJAR_WORKER=fk33-%s\n' "$SERIAL"
+    } >"$CARD_CONFIG_DIR/$SERIAL.env"
+done
+
+UDEV_GENERATED="$CONFIG_DIR/99-fk33-sqrl.rules"
+{
+    printf '# Generated by FK33 FJAR Miner %s.\n' "$VERSION"
+    for SERIAL in "${SERIALS[@]}"; do
+        printf '%s\n' \
+            "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"0403\", ATTR{idProduct}==\"6010\", ATTR{serial}==\"$SERIAL\", GROUP=\"plugdev\", MODE=\"0660\", TAG+=\"uaccess\""
+    done
+} >"$UDEV_GENERATED"
+
+for UNIT in fk33-sqrl-fleet.service fjar-fk33-fleet@.service; do
     if [[ -e "$SYSTEMD_DIR/$UNIT" ]]; then
         cp -p "$SYSTEMD_DIR/$UNIT" "$SYSTEMD_DIR/$UNIT.before-$STAMP"
     fi
     install -m 0644 "$SCRIPT_DIR/systemd/$UNIT" "$SYSTEMD_DIR/$UNIT"
 done
 
+if ((INSTALL_UDEV)); then
+    /usr/bin/sudo -n /usr/bin/install -o root -g root -m 0644 \
+        "$UDEV_GENERATED" /etc/udev/rules.d/99-fk33-sqrl.rules
+    /usr/bin/sudo -n /usr/bin/udevadm control --reload-rules
+    for SERIAL in "${SERIALS[@]}"; do
+        SERIAL_FILE=$(grep -l "^${SERIAL}$" \
+            /sys/bus/usb/devices/*/serial 2>/dev/null || true)
+        [[ -n "$SERIAL_FILE" ]] &&
+            /usr/bin/sudo -n /usr/bin/udevadm trigger \
+                --action=change "${SERIAL_FILE%/serial}" || true
+    done
+fi
+
+if ((ENABLE_LINGER)); then
+    /usr/bin/sudo -n /usr/bin/loginctl enable-linger "$USER"
+fi
+
 systemctl --user daemon-reload
 
 printf '\nInstalled FK33 FJAR Miner %s\n' "$VERSION"
 printf 'Release: %s\n' "$INSTALL_DIR"
-printf 'Serial:  %s\n' "$SERIAL"
-printf 'Port:    %s\n' "$HW_PORT"
-printf 'Config:  %s\n' "$CARD_CONFIG_DIR/$SERIAL.env"
+printf 'Fleet:   %s\n' "$SERIAL_LIST"
+printf 'Ports:   %s-%s\n' "$BASE_PORT" "${PORTS[-1]}"
+printf 'Config:  %s\n' "$CONFIG_DIR"
 printf 'SQRL:    %s\n' "$PRIVATE_BIN/sqrl_bridge_rawjtag_coe"
+printf 'Udev:    %s\n' "$UDEV_GENERATED"
 
 if ((START_NOW)); then
-    "$SCRIPT_DIR/start-card.sh" "$SERIAL"
+    "$SCRIPT_DIR/start-fleet.sh"
 else
-    printf '\nNo hardware was programmed. Start after review with:\n\n'
-    printf '  %q %q\n' "$SCRIPT_DIR/start-card.sh" "$SERIAL"
+    printf '\nNo hardware was programmed. After reviewing the configuration, run:\n\n'
+    printf '  %q\n' "$SCRIPT_DIR/start-fleet.sh"
 fi

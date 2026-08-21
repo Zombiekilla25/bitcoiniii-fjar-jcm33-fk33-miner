@@ -5,6 +5,7 @@ import importlib.util
 import os
 from pathlib import Path
 import socket
+import tempfile
 import unittest
 
 
@@ -81,6 +82,39 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(schedule.cycle_seconds, 6000)
         self.assertEqual(schedule.dev_seconds, 60)
         self.assertEqual(schedule.user_seconds, 5940)
+
+    def test_fleet_mapping_accepts_exact_serial_port_pair(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "fleet.env"
+            log = Path(directory) / "sqrl.log"
+            config.write_text("FJAR_FLEET_SERIALS=111111,222222\n")
+            log.write_text(
+                "Device with serial 111111A matches filter\n"
+                "Opened virtual TCP serial port 22000\n"
+                "Device with serial 222222A matches filter\n"
+                "Opened virtual TCP serial port 22001\n"
+                "Bitstream Loaded\nBitstream Loaded\n"
+            )
+            bridge.validate_fleet_mapping(
+                "111111", 22000, str(config), str(log)
+            )
+
+    def test_fleet_mapping_rejects_a_later_cards_port(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "fleet.env"
+            log = Path(directory) / "sqrl.log"
+            config.write_text("FJAR_FLEET_SERIALS=111111,222222\n")
+            log.write_text(
+                "Device with serial 111111A matches filter\n"
+                "Opened virtual TCP serial port 22000\n"
+                "Device with serial 222222A matches filter\n"
+                "Opened virtual TCP serial port 22001\n"
+                "Bitstream Loaded\nBitstream Loaded\n"
+            )
+            with self.assertRaises(bridge.HardwareDisconnected):
+                bridge.validate_fleet_mapping(
+                    "111111", 22001, str(config), str(log)
+                )
 
 
 if __name__ == "__main__":

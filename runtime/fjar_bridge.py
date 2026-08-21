@@ -8,6 +8,7 @@ import re
 import socket
 import struct
 import time
+from pathlib import Path
 
 # Terminal colors
 GREEN = '\033[92m'
@@ -24,6 +25,11 @@ WORKER = os.environ.get("FJAR_WORKER", "fk33").strip()
 SERIAL = os.environ.get("FJAR_SERIAL", os.environ.get("BC3_SERIAL", "UNKNOWN"))
 HW_HOST = os.environ.get("FJAR_HW_HOST", "127.0.0.1")
 HW_PORT = int(os.environ.get("FJAR_HW_PORT", "22000"))
+FLEET_CONFIG = os.environ.get("FJAR_FLEET_CONFIG", "").strip()
+FLEET_LOG = os.environ.get(
+    "FJAR_FLEET_LOG",
+    str(Path.home() / ".local/state/fk33-fjar-miner/fleet/sqrl.log"),
+)
 
 # Transparent developer fee policy: 60 seconds of every 100-minute cycle.
 # The phase is deterministically spread by serial/worker so a multi-card fleet
@@ -84,6 +90,54 @@ def encode_frame(frame_type, payload):
     return header + payload + crc16(payload).to_bytes(2, "little")
 
 
+def validate_fleet_mapping(
+    serial=SERIAL,
+    port=HW_PORT,
+    config_path=FLEET_CONFIG,
+    log_path=FLEET_LOG,
+):
+    """Fail closed if the shared bridge mapped this serial elsewhere."""
+    if not config_path:
+        return
+
+    try:
+        config = Path(config_path).read_text(errors="replace")
+        log = Path(log_path).read_text(errors="replace")
+    except OSError as error:
+        raise HardwareDisconnected(
+            f"fleet mapping state unavailable: {error}"
+        ) from error
+
+    match = re.search(r"^FJAR_FLEET_SERIALS=([0-9]+(?:,[0-9]+)*)$", config, re.M)
+    if not match:
+        raise HardwareDisconnected("fleet serial configuration is invalid")
+    configured = match.group(1).split(",")
+
+    if log.count("Bitstream Loaded") < len(configured):
+        raise HardwareDisconnected("fleet programming is not complete")
+
+    mappings = {}
+    pending = None
+    for line in log.splitlines():
+        selected = re.search(
+            r"Device with serial ([0-9]+)A matches filter", line
+        )
+        if selected:
+            pending = selected.group(1)
+            continue
+
+        opened = re.search(r"Opened virtual TCP serial port ([0-9]+)", line)
+        if pending is not None and opened:
+            mappings[pending] = int(opened.group(1))
+            pending = None
+
+    if mappings.get(str(serial)) != int(port):
+        raise HardwareDisconnected(
+            f"fleet serial/port mismatch: serial={serial} "
+            f"expected_port={port} observed_port={mappings.get(str(serial))}"
+        )
+
+
 class HardwareTransport:
     """Persistent TCP connection to sqrl_bridge_rawjtag_coe."""
 
@@ -103,6 +157,7 @@ class HardwareTransport:
 
     def connect(self):
         self.close()
+        validate_fleet_mapping()
         sock = socket.create_connection((self.host, self.port), timeout=15)
         sock.setblocking(False)
         self.sock = sock

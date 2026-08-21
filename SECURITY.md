@@ -16,7 +16,7 @@ failed verification.
 ## Network access
 
 The Python bridge connects to the configured Stratum host and to a TCP port
-exposed by the operator-supplied SQRL raw-JTAG bridge. The default pool is
+exposed by the bundled SQRL raw-JTAG bridge. The default pool is
 `stratum.pythonpool.dev:3358`. The bridge used for validation bound its TCP
 listener to `0.0.0.0`, not only loopback. Do not expose the configured hardware
 ports to untrusted networks; use the host firewall or an isolated mining LAN.
@@ -24,11 +24,11 @@ Review both service files before running them.
 
 ## Hardware isolation
 
-Every SQRL service selects an exact FK33 serial and refuses ambiguous USB
-matches. Each card uses a private working directory and a unique configured TCP
-port. Do not run two services against the same serial. Stop immediately if logs
-show an FPGA/Python digest mismatch, repeated target-comparator disagreement,
-or persistent pool rejects.
+One SQRL service owns the complete configured fleet and refuses ambiguous USB
+matches. Each Python miner uses a unique, validated serial-to-port mapping. Do
+not run another SQRL, Vivado, hardware-server, or USB/IP owner against the same
+cards. Stop immediately if logs show an FPGA/Python digest mismatch, repeated
+target-comparator disagreement, a changed mapping, or persistent pool rejects.
 
 ## Reporting a vulnerability
 

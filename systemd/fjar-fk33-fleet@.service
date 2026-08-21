@@ -1,0 +1,25 @@
+[Unit]
+Description=Standalone FJARCODE fleet miner for FK33 %i
+Wants=network-online.target
+Requires=fk33-sqrl-fleet.service
+After=network-online.target fk33-sqrl-fleet.service
+
+[Service]
+Type=simple
+Environment=FJAR_SERIAL=%i
+Environment=FJAR_HW_HOST=127.0.0.1
+Environment=FJAR_FLEET_CONFIG=%h/.config/fk33-fjar-miner/fleet.env
+EnvironmentFile=%h/.config/fk33-fjar-miner/miner.env
+EnvironmentFile=%h/.config/fk33-fjar-miner/cards/%i.env
+WorkingDirectory=%h/.local/state/fk33-fjar-miner/%i
+ExecStartPre=%h/.local/share/fk33-fjar-miner/current/runtime/wait-fleet-card.sh %i ${FJAR_HW_PORT}
+ExecStart=/usr/bin/python3 -u %h/.local/share/fk33-fjar-miner/current/runtime/fjar_bridge.py
+Restart=always
+RestartSec=10
+KillMode=control-group
+TimeoutStopSec=30
+StandardOutput=append:%h/.local/state/fk33-fjar-miner/%i/miner.log
+StandardError=append:%h/.local/state/fk33-fjar-miner/%i/miner.log
+
+[Install]
+WantedBy=default.target

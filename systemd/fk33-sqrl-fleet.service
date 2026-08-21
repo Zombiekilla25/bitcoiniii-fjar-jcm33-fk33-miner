@@ -1,0 +1,19 @@
+[Unit]
+Description=SQRL raw-JTAG fleet bridge for FK33 cards
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+Environment=FJAR_FLEET_CONFIG=%h/.config/fk33-fjar-miner/fleet.env
+ExecStartPre=%h/.local/share/fk33-fjar-miner/current/runtime/release-ftdi-fleet.sh
+ExecStart=%h/.local/share/fk33-fjar-miner/current/runtime/start-sqrl-fleet.sh
+Restart=always
+RestartSec=10
+KillMode=control-group
+TimeoutStopSec=45
+StandardOutput=append:%h/.local/state/fk33-fjar-miner/fleet/sqrl-stdout.log
+StandardError=append:%h/.local/state/fk33-fjar-miner/fleet/sqrl-stdout.log
+
+[Install]
+WantedBy=default.target

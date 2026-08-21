@@ -1,38 +1,47 @@
 # FK33 FJAR Miner
 
 Standalone SHA3-256T FPGA mining software for the SQRL Forest Kitten 33
-(Xilinx/AMD Virtex UltraScale+ XCVU33P). End users run a prebuilt bitstream,
-the SQRL raw-JTAG transport, and Python 3. Vivado is not required on the mining
-host.
+(Xilinx/AMD Virtex UltraScale+ XCVU33P). The mining host uses a prebuilt
+bitstream, one SQRL raw-JTAG fleet bridge, and one Python miner per card.
+Vivado is not required at runtime.
 
 ## Release status
 
-`v0.2.0-beta` is a hardware-tested public beta.
+`v0.2.1-beta` is a hardware-tested fleet beta.
 
 - Target: SQRL FK33 / `xcvu33p-fsvh2104-2-e`
 - Hash clock: 350 MHz
 - Architecture: 80 pipes with three active TOKEN3 contexts
 - Routed timing: WNS `+0.031 ns`, TNS `0.000 ns`
 - Routing: 642,228 fully routed nets, zero routing errors
-- Utilization: 262,934 CLB LUTs (59.80%), 529,955 registers (60.27%)
-- Physical protocol test: 117-byte job frame in, 45-byte share frame out
-- Pool validation: matching FPGA/Python SHA3-256T digests and accepted FJAR
-  shares through the standalone transport
+- Protocol: 117-byte job frame in, 45-byte share frame out
+- Physical fleet validation: five FK33s, five TCP transports, five miners
+- Reboot validation: automatic programming and fresh accepted shares on all
+  five cards without Vivado
 
 This is experimental hardware software, not a guaranteed-profit product.
 
-## What changed from v0.1
+## What changed in v0.2.1
 
-The v0.1 runtime used Vivado hardware manager and VIO continuously. This
-release replaces that runtime with a framed BSCAN transport. Vivado is now
-needed only by developers rebuilding the bitstream from RTL.
+The old beta tried to run a separate SQRL process for every card. The SQRL
+bridge owns and scans the complete FTDI fleet, so that design caused collisions.
+This release runs exactly one bridge process and maps consecutive TCP ports to
+independent Python miners. Serial-to-port mapping is checked before a miner may
+connect.
+
+The authorized patched SQRL executable is now bundled. Its provenance,
+checksums, two byte-level modifications, and permission record are in
+[third_party/sqrl](third_party/sqrl).
 
 ## Safety
 
-Programming an FPGA replaces its active configuration. Confirm the exact USB
-serial and stop any other process controlling that card. The supplied image is
-only for an FK33 XCVU33P. Sustained 350 MHz operation requires suitable power
-and cooling. Use is at your own risk.
+Programming an FPGA replaces its active configuration. Stop every other Vivado,
+hardware-server, USB/IP, or SQRL process that can control these cards. The
+supplied image is only for an FK33 XCVU33P. Sustained 350 MHz operation requires
+suitable power and cooling.
+
+The SQRL bridge listens on all interfaces. Firewall the configured port range
+or use an isolated mining network.
 
 ## Developer fee
 
@@ -51,17 +60,18 @@ the developer wallet. Read [docs/DEV_FEE.md](docs/DEV_FEE.md).
 
 ## Runtime requirements
 
-- Ubuntu 24.04 x86-64 was used for validation
-- SQRL FK33 with XCVU33P FPGA
+- Linux x86-64; Ubuntu 24.04 was physically validated
+- one or more SQRL FK33 XCVU33P cards
 - Python 3.10 or newer
-- `systemd --user`, `flock`, `ss`, and standard GNU tools
+- user systemd, `sudo`, `ss`, `flock`, and standard GNU tools
 - a lowercase public FJARCODE payout address
-- a legally obtained `sqrl_bridge_rawjtag_coe` executable
-- any compatibility libraries required by that executable
-- firewall protection for its hardware TCP port on untrusted networks
+- authorized ABI-5 `libncurses` and `libtinfo` files if the host lacks them
+- serial-specific USB access and permission to release `ftdi_sio`
+- firewall protection for the SQRL TCP port range
 
-The SQRL executable and legacy ABI libraries are **not distributed in this
-repository**. See [THIRD_PARTY.md](THIRD_PARTY.md).
+The SQRL bridge is bundled under the permission described in
+[THIRD_PARTY.md](THIRD_PARTY.md). Legacy ncurses/tinfo libraries are not
+bundled.
 
 ## Verify
 
@@ -81,40 +91,41 @@ for SERIAL_FILE in /sys/bus/usb/devices/*/serial; do
 done
 ```
 
-## Install one card
+## Install a fleet
 
-Installation does not touch hardware unless `--start` is included.
+List cards in the bridge's physical scan order and assign consecutive ports.
+Installation does not program hardware unless `--start` is supplied.
 
 ```bash
 ./install.sh \
   --wallet 'fjarcode:YOUR_LOWERCASE_ADDRESS' \
-  --serial 'YOUR_FK_SERIAL' \
-  --sqrl-bridge '/path/to/sqrl_bridge_rawjtag_coe' \
-  --compat-libs '/path/to/compat_libs' \
-  --hw-port 22000
+  --card 'FIRST_SERIAL:22000' \
+  --card 'SECOND_SERIAL:22001' \
+  --compat-libs '/path/to/authorized/compat_libs' \
+  --install-udev \
+  --enable-linger
 ```
 
-Review the generated files:
+`--install-udev` and `--enable-linger` use noninteractive sudo and fail
+rather than prompt. Configure sudo access deliberately before using those
+options. Review the generated files under
+`~/.config/fk33-fjar-miner/`, then start:
 
 ```bash
-sed -n '1,120p' "$HOME/.config/fk33-fjar-miner/miner.env"
-sed -n '1,120p' "$HOME/.config/fk33-fjar-miner/cards/YOUR_FK_SERIAL.env"
+./start-fleet.sh
 ```
 
-Then start:
-
-```bash
-./start-card.sh YOUR_FK_SERIAL
-```
-
-For another card on the same host, run the installer again with a different
-serial and unused `--hw-port`, such as 22001.
+If USB scan order changes, the per-card readiness check refuses a mismatched
+serial-to-port mapping. Re-run the installer with the observed order; do not
+bypass the check.
 
 ## Monitor and stop
 
 ```bash
-./status-card.sh YOUR_FK_SERIAL
-./disable-card.sh YOUR_FK_SERIAL
+./status-fleet.sh
+./status-card.sh YOUR_SERIAL
+./disable-card.sh YOUR_SERIAL
+./disable-fleet.sh
 ```
 
 Persistent `MISMATCH`, comparator-disagreement, or rejected-share messages are
@@ -122,18 +133,19 @@ a stop condition.
 
 ## Build from RTL
 
-Developers can rebuild the prebuilt image with Vivado 2026.1. End users do not
-perform this step. See [docs/BUILD.md](docs/BUILD.md).
+Developers can rebuild the image with Vivado 2026.1. End users do not perform
+this step. See [docs/BUILD.md](docs/BUILD.md).
 
 ## Contents
 
 - `hardware/source/` — SystemVerilog, constraints, probe, and build flow
 - `hardware/prebuilt/` — tested standalone mining bitstream
 - `hardware/reports/` — route, timing, and utilization evidence
-- `runtime/fjar_bridge.py` — framed transport, Stratum, validation, and fee
-- `systemd/` — per-card standalone service templates
+- `runtime/` — fleet orchestration, framed transport, Stratum, and validation
+- `systemd/` — shared bridge and per-card miner units
+- `third_party/sqrl/` — authorized bridge, provenance, and exact patch record
 - `tests/` — offline protocol and scheduling tests
-- `docs/` — build, fee, systemd, and validation documentation
+- `docs/` — build, fee, service, and validation documentation
 
 The miner requires only a public payout address. Never provide a private key,
 seed phrase, wallet backup, passphrase, exchange password, or RPC credential.

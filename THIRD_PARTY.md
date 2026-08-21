@@ -1,30 +1,44 @@
 # Third-party runtime components
 
-This repository does not distribute the SQRL raw-JTAG bridge executable or the
-legacy ABI libraries sometimes required by that executable.
+## SQRL bridge
 
-The installer accepts operator-supplied paths:
+This release includes `third_party/sqrl/sqrl_bridge_rawjtag_coe`, an x86-64
+Linux SQRL bridge patched at two validated instruction sites for direct
+USER1/USER2 BSCAN transport.
 
-```text
---sqrl-bridge /path/to/sqrl_bridge_rawjtag_coe
---compat-libs /path/to/compat_libs
-```
+The project maintainer represents that David Stanfill, publisher of the SQRL
+bridge and a Squirrels Research contributor, granted permission to redistribute
+the original executable and this patched derivative as part of this project.
+See:
 
-Only use files you are authorized to possess and run. Employment history,
-hardware ownership, or technical compatibility does not by itself establish
-redistribution rights. Do not attach these third-party files to a public GitHub
-release unless their license or rightsholder explicitly permits redistribution.
+- `third_party/sqrl/REDISTRIBUTION_PERMISSION.md`
+- `third_party/sqrl/PATCH_NOTES.md`
+- `third_party/sqrl/patch_rawjtag.py`
 
-The validated bridge was an x86-64 Linux executable. On Ubuntu 24.04 it needed
-`libncurses.so.5` and `libtinfo.so.5` supplied through `LD_LIBRARY_PATH`. Your
-copy may have different dependencies. The installer runs `ldd` with the chosen
-compatibility directory and refuses unresolved libraries.
+Upstream reference:
+[github.com/SquirrelsResearch/eth-release-pkg](https://github.com/SquirrelsResearch/eth-release-pkg),
+commit `622233937b70d25ea0133be41bf39add14e67617`.
 
-The bridge creates and truncates a file named `virtual_ports` in its working
-directory. The supplied service gives every card a private writable directory;
-running it from an unwritable directory can crash older bridge builds.
+The installer uses the bundled executable by default and accepts
+`--sqrl-bridge PATH` for an authorized compatible override.
 
-The validated executable bound its TCP listener to all interfaces. Restrict the
-configured port with the host firewall or use an isolated mining network. The
-Python miner connects through `127.0.0.1`, but that does not itself prevent
-other hosts from reaching a listener bound to `0.0.0.0`.
+## Compatibility libraries
+
+The bridge may require `libncurses.so.5` and `libtinfo.so.5` on current
+Linux systems. These libraries are not bundled. Obtain them from an authorized
+distribution or installation and pass their directory with
+`--compat-libs DIR`. The installer runs `ldd` and refuses unresolved
+libraries.
+
+## Operational constraints
+
+The bridge creates and truncates `virtual_ports` in its working directory.
+The service provides a private writable fleet directory; running older bridge
+builds from an unwritable directory can crash.
+
+One bridge process must own the whole local FK33 fleet. Do not start one bridge
+per card. It allocates consecutive ports in USB scan order, and the miner
+services validate each serial-to-port mapping before connecting.
+
+The executable binds its TCP listeners to all interfaces. Restrict the fleet
+port range with the host firewall or use an isolated mining network.

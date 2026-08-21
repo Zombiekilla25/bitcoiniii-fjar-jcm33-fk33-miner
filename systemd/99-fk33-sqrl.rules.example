@@ -1,0 +1,3 @@
+# Generate serial-specific rules with install.sh --install-udev.
+# Do not use this placeholder file directly.
+SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6010", ATTR{serial}=="REPLACE_WITH_SERIAL", GROUP="plugdev", MODE="0660", TAG+="uaccess"

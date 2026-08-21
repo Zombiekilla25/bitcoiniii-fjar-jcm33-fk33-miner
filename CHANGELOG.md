@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.1-beta — 2026-08-21
+
+- Replaced per-card SQRL processes with one shared fleet bridge.
+- Added consecutive fleet ports and fail-closed serial-to-port validation.
+- Added shared bridge and per-card miner systemd units.
+- Added fleet start, stop, status, FTDI-release, and readiness helpers.
+- Added serial-specific udev-rule generation and optional linger setup.
+- Validated five cards, five accepted-share streams, and a real cold service
+  restart after host reboot without Vivado.
+- Bundled the authorized patched SQRL bridge and documented upstream
+  provenance, exact byte changes, checksums, and the maintainer's
+  redistribution-permission representation.
+- Continued to exclude legacy ncurses/tinfo ABI libraries.
+
 ## 0.2.0-beta — 2026-08-21
 
 - Replaced the continuous Vivado/VIO runtime with a standalone framed BSCAN
@@ -7,16 +21,9 @@
 - Added full host-to-FPGA job frames and FPGA-to-host share frames with
   CRC-16/CCITT-FALSE validation and stream resynchronization.
 - Added a timing-clean, fully routed, uncompressed 350 MHz standalone image.
-- Physically validated a 117-byte job frame and 45-byte share frame.
-- Validated matching FPGA/Python digests and accepted FJAR pool shares without
-  Vivado on the mining host.
-- Added writable per-card SQRL run directories and configurable unique TCP
-  ports for multi-card hosts.
-- Added standalone installer, start, stop, status, verification, and systemd
-  tooling.
+- Physically validated framed transport, matching digests, and accepted shares.
+- Added initial standalone installation and service tooling.
 - Kept the disclosed 1% time-based developer-fee policy.
-- Excluded the third-party SQRL executable and ABI compatibility libraries from
-  redistribution; operators supply legally obtained copies during install.
 
 ## 0.1.0-beta — 2026-08-20
 

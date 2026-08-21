@@ -11,15 +11,15 @@ STATE="$HOME/.local/state/fk33-fjar-miner/$SERIAL"
 
 printf '===== SERVICES =====\n'
 systemctl --user --no-pager --full status \
-    "fk33-sqrl-bridge@$SERIAL.service" \
-    "fjar-fk33-standalone@$SERIAL.service" || true
+    fk33-sqrl-fleet.service "fjar-fk33-fleet@$SERIAL.service" || true
 
 printf '\n===== RECENT MINER ACTIVITY =====\n'
 grep -E \
-    'DEVFEE|connected|subscribed|authorized|difficulty=|FPGA job|SHARE|hw=|sw=|SUBMITTED|ACCEPTED|REJECTED|MISMATCH|disagreement|reconnecting' \
+    'DEVFEE|connected|authorized|difficulty=|FPGA job|SHARE|hw=|sw=|SUBMITTED|ACCEPTED|REJECTED|MISMATCH|disagreement|reconnecting' \
     "$STATE/miner.log" 2>/dev/null | tail -n 80 || true
 
-printf '\n===== RECENT SQRL ACTIVITY =====\n'
+printf '\n===== FLEET PROGRAMMING =====\n'
 grep -E \
     'matches filter|Opened virtual|Bitstream Loaded|Got connection|Accepting Client|Failed|Error' \
-    "$STATE/sqrl.log" 2>/dev/null | tail -n 50 || true
+    "$HOME/.local/state/fk33-fjar-miner/fleet/sqrl.log" 2>/dev/null |
+    tail -n 100 || true
