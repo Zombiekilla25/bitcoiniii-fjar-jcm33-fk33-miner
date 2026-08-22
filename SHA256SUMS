@@ -44,7 +44,7 @@ b7f5de7f2b06daff4b48ce426a902f1dc0a051f149ea24aa7d3eaf11f6d1db03  ./install.sh
 79384c2bfadd1a3ac9c32374359256ab6d1d9cba2fee0ddf20cda16974ca47f8  ./NOTICE.md
 601a2b95294fc88271ee48986bb113815e5ec1c92277eb63e71d0b24a0f8f6f8  ./README.md
 7172de1321d65e8f94d86bf034bc0a3cbea8ccacd48b31f3656d5707a7ba4f1f  ./RELEASE_NOTES.md
-c8ac82e723a15c8883fa948051c2b3fb7006871863f301cbfc1fabb605b2d333  ./runtime/fjar_bridge.py
+14145d68fe2c5ddfeb4da32bc00a917548050f0edecb9e072eb08c4c8e9f0c10  ./runtime/fjar_bridge.py
 ed623ae6b4c8490e78b96530c1d13e590c4c02ae31d048ea7c3da560ede3baad  ./runtime/release-ftdi-fleet.sh
 05ca056070e07635107b63c2ed17565fd5990821fdbc7951afd4708f175cf9c4  ./runtime/start-sqrl-fleet.sh
 67e593c4e86b8531e1cf357892974fb8e517c4480430df7bf0acdb2c79034166  ./runtime/wait-fleet-card.sh

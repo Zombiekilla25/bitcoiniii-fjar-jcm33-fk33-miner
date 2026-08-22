@@ -449,7 +449,7 @@ def submit(sock, job, nonce):
     submit_id += 1
     pending_submits[request_id] = {
         "fee_mode": job["fee_mode"],
-        "difficulty": job["difficulty"],
+        "difficulty": job.get("difficulty", difficulty),
         "nonce": nonce_hex,
         "job_id": job["job_id"],
     }
