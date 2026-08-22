@@ -30,6 +30,10 @@ FLEET_LOG = os.environ.get(
     "FJAR_FLEET_LOG",
     str(Path.home() / ".local/state/fk33-fjar-miner/fleet/sqrl.log"),
 )
+# A 500 MH/s engine exhausts the 32-bit nonce field in 8.59 seconds.  Roll
+# extranonce2 before that point so every dispatched header has a fresh nonce
+# space even when the pool keeps the same stratum job active for longer.
+WORK_ROLL_SECONDS = float(os.environ.get("FJAR_WORK_ROLL_SECONDS", "7.5"))
 
 # Transparent developer fee policy: 60 seconds of every 100-minute cycle.
 # The phase is deterministically spread by serial/worker so a multi-card fleet
@@ -108,7 +112,9 @@ def validate_fleet_mapping(
             f"fleet mapping state unavailable: {error}"
         ) from error
 
-    match = re.search(r"^FJAR_FLEET_SERIALS=([0-9]+(?:,[0-9]+)*)$", config, re.M)
+    match = re.search(
+        r"^FJAR_FLEET_SERIALS=([0-9]+(?:,[0-9]+)*)$", config, re.M
+    )
     if not match:
         raise HardwareDisconnected("fleet serial configuration is invalid")
     configured = match.group(1).split(",")
@@ -333,6 +339,10 @@ def validate_configuration():
         raise ValueError("FJAR_POOL_PORT must be between 1 and 65535")
     if not 1 <= HW_PORT <= 65535:
         raise ValueError("FJAR_HW_PORT must be between 1 and 65535")
+    if not 1.0 <= WORK_ROLL_SECONDS <= 8.0:
+        raise ValueError(
+            "FJAR_WORK_ROLL_SECONDS must be between 1.0 and 8.0 seconds"
+        )
 
 
 def wallet_for_mode(mode):
@@ -354,11 +364,20 @@ def diff1_target():
 def share_target(diff):
     return int(diff1_target() / max(diff, 1e-30))
 
-def build_job(params, active_wallet, fee_mode):
+def encode_extranonce2(counter):
+    if extranonce2_size is None or extranonce2_size <= 0:
+        raise RuntimeError("pool extranonce2 size is not available")
+
+    modulus = 1 << (8 * extranonce2_size)
+    value = int(counter) % modulus
+    return value.to_bytes(extranonce2_size, "big").hex()
+
+
+def build_job(params, active_wallet, fee_mode, extranonce2_counter):
     global tag_counter
 
     job_id, prevhash, coinb1, coinb2, branches, version, nbits, ntime, clean = params
-    extranonce2 = "00" * extranonce2_size
+    extranonce2 = encode_extranonce2(extranonce2_counter)
 
     coinbase = bytes.fromhex(coinb1 + extranonce1 + extranonce2 + coinb2)
     merkle = sha256d(coinbase)
@@ -393,6 +412,7 @@ def build_job(params, active_wallet, fee_mode):
         "ntime": ntime,
         "prefix": prefix,
         "target": target,
+        "difficulty": difficulty,
         "username": f"{active_wallet}.{WORKER}",
         "fee_mode": fee_mode,
     }
@@ -403,7 +423,8 @@ def dispatch_job(hardware, job):
     hardware.send_job(job)
     print(
         f"[>] FPGA job tag={job['tag']:02x} "
-        f"id={job['job_id']} target={job['target']:064x}"
+        f"id={job['job_id']} extranonce2={job['extranonce2']} "
+        f"target={job['target']:064x}"
     )
 
 def submit(sock, job, nonce):
@@ -428,6 +449,7 @@ def submit(sock, job, nonce):
     submit_id += 1
     pending_submits[request_id] = {
         "fee_mode": job["fee_mode"],
+        "difficulty": job["difficulty"],
         "nonce": nonce_hex,
         "job_id": job["job_id"],
     }
@@ -513,10 +535,14 @@ def run_session(active_wallet, fee_mode, schedule, hardware):
 
         sock.settimeout(0.1)
         buf = ""
+        latest_notify_params = None
+        extranonce2_counter = 0
+        next_work_roll = None
         switch_in = schedule.seconds_until_switch(time.time())
         print(
-            f"[*][{fee_mode}] FJAR FK33 80-pipe TOKEN3 350MHz "
+            f"[*][{fee_mode}] FJAR FK33 BSCAN miner "
             f"worker={WORKER} wallet={active_wallet} "
+            f"work_roll={WORK_ROLL_SECONDS:.1f}s "
             f"next_switch={switch_in:.1f}s cwd={os.getcwd()}"
         )
 
@@ -526,6 +552,31 @@ def run_session(active_wallet, fee_mode, schedule, hardware):
                 raise WalletRotation(f"{fee_mode} -> {new_mode}")
 
             check_share(sock, hardware)
+
+            monotonic_now = time.monotonic()
+            if (
+                latest_notify_params is not None
+                and next_work_roll is not None
+                and monotonic_now >= next_work_roll
+            ):
+                rolled_job = build_job(
+                    latest_notify_params,
+                    active_wallet,
+                    fee_mode,
+                    extranonce2_counter,
+                )
+                extranonce2_counter += 1
+                dispatch_job(hardware, rolled_job)
+                print(
+                    f"[ROLL] fresh nonce space "
+                    f"extranonce2={rolled_job['extranonce2']}"
+                )
+
+                # Use an absolute cadence without dispatching a burst if the
+                # process was paused for longer than one interval.
+                next_work_roll += WORK_ROLL_SECONDS
+                if next_work_roll <= monotonic_now:
+                    next_work_roll = monotonic_now + WORK_ROLL_SECONDS
 
             try:
                 data = sock.recv(4096)
@@ -569,9 +620,17 @@ def run_session(active_wallet, fee_mode, schedule, hardware):
                     msg.get("method") == "mining.notify"
                     and extranonce1 is not None
                 ):
-                    dispatch_job(
-                        hardware,
-                        build_job(msg["params"], active_wallet, fee_mode)
+                    latest_notify_params = msg["params"]
+                    pool_job = build_job(
+                        latest_notify_params,
+                        active_wallet,
+                        fee_mode,
+                        extranonce2_counter,
+                    )
+                    extranonce2_counter += 1
+                    dispatch_job(hardware, pool_job)
+                    next_work_roll = (
+                        time.monotonic() + WORK_ROLL_SECONDS
                     )
 
                 elif isinstance(msg.get("id"), int) and msg["id"] >= 100:
@@ -579,14 +638,19 @@ def run_session(active_wallet, fee_mode, schedule, hardware):
                     response_mode = (
                         metadata["fee_mode"] if metadata else fee_mode
                     )
+                    response_difficulty = (
+                        metadata["difficulty"] if metadata else difficulty
+                    )
                     if msg.get("result") is True:
                         print(
                             f"{GREEN}[ACCEPTED][{response_mode}] "
+                            f"difficulty={response_difficulty} "
                             f"share accepted by pool response={msg}{RESET}"
                         )
                     else:
                         print(
                             f"{RED}[REJECTED][{response_mode}] "
+                            f"difficulty={response_difficulty} "
                             f"pool submit response={msg}{RESET}"
                         )
 
