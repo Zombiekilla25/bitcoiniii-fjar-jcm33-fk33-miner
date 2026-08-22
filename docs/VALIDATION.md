@@ -1,36 +1,29 @@
 # Hardware validation
 
-The standalone path completed these gates on Ubuntu 24.04 x86-64:
+The v0.3.0-beta standalone path completed these gates on Ubuntu 24.04 x86-64:
 
-1. Exact-card SQRL USB/JTAG selection.
+1. Exact-card SQRL USB/JTAG selection and fail-closed serial/port mapping.
 2. FPGA programming without Vivado on the runtime host.
-3. Complete framed protocol probe: 117 bytes in and 45 bytes out.
-4. Full 350 MHz mining-image synthesis, implementation, and routing.
-5. Positive routed timing with WNS `+0.031 ns` and TNS `0.000 ns`.
-6. Zero routing errors across 642,228 fully routed nets.
-7. Live Stratum subscription and authorization.
-8. Matching hardware and Python SHA3-256T digests.
-9. Accepted FJAR pool shares through the standalone transport.
-10. One bridge discovering and programming five physical FK33 cards.
-11. Five independent miners producing accepted shares without mismatches.
-12. Real reboot recovery with persistent USB permissions, five loaded
-    bitstreams, five active miners, and five fresh accepted shares.
+3. Complete 117-byte job and 45-byte share framed transport.
+4. SHA3T known-answer simulation and physical digest verification.
+5. Full 500 MHz synthesis, placement, routing, and bit generation.
+6. Positive timing: WNS `+0.336 ns`, TNS `0.000 ns`, WHS `+0.010 ns`.
+7. Zero routing errors across 360,460 fully routed nets.
+8. One bridge programming six physical FK33 cards.
+9. Six independent miners producing matching hardware/Python digests.
+10. Pool-accepted shares from every card with zero measured rejects.
+11. Fresh `extranonce2` work every 7.5 seconds before nonce exhaustion.
+12. Measured effective fleet rate of 2.887 GH/s, up 91.95% from 1.504 GH/s.
 
-The bridge may log failure to read optional JungleCat metadata on an FK33. That
-message was nonfatal during validation.
+The bridge may report failure to read optional JungleCat metadata on an FK33.
+That message was nonfatal during validation.
 
 ## Fleet acceptance gate
 
-For every configured card, require:
+For every card require its expected USB serial and port, released FTDI
+interfaces, completed bitstream load, matching `hw=` and `sw=` digests, fresh
+work-roll messages, and pool responses with `result: True`.
 
-- exactly one matching USB serial;
-- its two FTDI interfaces released from `ftdi_sio`;
-- read/write access to its USB node;
-- one distinct TCP listener;
-- the expected serial followed by the expected port in the fleet log;
-- a completed bitstream-load event;
-- matching `hw=` and `sw=` digest lines;
-- a pool response with `result: True`.
-
-Any mismatch, traceback, rejected share, repeated service restart, or changed
-serial-to-port association is a stop condition.
+Any unexpected mapping, traceback, rejected share, digest mismatch, comparator
+disagreement, repeated restart, or stale nonce-space behavior is a stop
+condition.

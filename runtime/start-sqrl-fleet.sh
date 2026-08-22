@@ -28,7 +28,7 @@ fi
 
 SQRL="$INSTALL_ROOT/private/bin/sqrl_bridge_rawjtag_coe"
 LIBS="$INSTALL_ROOT/private/compat_libs"
-BIT="$INSTALL_ROOT/current/hardware/prebuilt/fk33_fjar_bscan_350.bit"
+BIT="$INSTALL_ROOT/current/hardware/prebuilt/fk33_fjar_bscan_500.bit"
 
 [[ -x "$SQRL" ]] || {
     printf 'SQRL bridge is missing or not executable: %s\n' "$SQRL" >&2
