@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0-beta — 2026-08-22
+
+- Added a hardware-validated 500 MHz initiation-interval-one SHA3T engine.
+- Added the authenticated uncompressed 500 MHz prebuilt FK33 bitstream.
+- Added complete source, simulation, route, timing, utilization, and congestion evidence.
+- Added 7.5-second extranonce2 rolling before 32-bit nonce-space exhaustion.
+- Preserved hardware/Python digest verification and fail-closed fleet mapping.
+- Validated six cards at 2.887 GH/s effective pool hashrate, a 91.95% gain over
+  the 1.504 GH/s pre-fix measurement, with zero measured rejected shares.
+- Measured 306 W whole-rig AC power, equal to 9.43 MH/s/W at the wall.
+
 ## 0.2.1-beta — 2026-08-21
 
 - Replaced per-card SQRL processes with one shared fleet bridge.

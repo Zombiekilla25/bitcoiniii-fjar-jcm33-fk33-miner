@@ -1,6 +1,6 @@
 # FK33 500 MHz performance validation
 
-The `v0.3.0-beta` candidate was validated on six SQRL FK33 cards using the
+The `v0.3.0-beta` release was validated on six SQRL FK33 cards using the
 500 MHz initiation-interval-one SHA3-256T engine and the standalone framed
 BSCAN transport.
 

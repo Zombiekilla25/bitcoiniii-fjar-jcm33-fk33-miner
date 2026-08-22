@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VERSION="0.2.1-beta"
+VERSION="0.3.0-beta"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 INSTALL_ROOT="$HOME/.local/share/fk33-fjar-miner"
 INSTALL_DIR="$INSTALL_ROOT/$VERSION"

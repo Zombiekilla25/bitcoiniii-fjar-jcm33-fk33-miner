@@ -1,47 +1,60 @@
 # FK33 FJAR Miner
 
 Standalone SHA3-256T FPGA mining software for the SQRL Forest Kitten 33
-(Xilinx/AMD Virtex UltraScale+ XCVU33P). The mining host uses a prebuilt
-bitstream, one SQRL raw-JTAG fleet bridge, and one Python miner per card.
-Vivado is not required at runtime.
+(Xilinx/AMD Virtex UltraScale+ XCVU33P). One SQRL raw-JTAG fleet bridge owns
+the cards and one Python miner handles each independent TCP transport. Vivado
+is not required on the runtime host.
 
-## Release status
+## v0.3.0-beta: nearly 3 GH/s from six FK33s
 
-`v0.2.1-beta` is a hardware-tested fleet beta.
+The hardware-tested `v0.3.0-beta` release moves the standalone fleet to a
+timing-clean 500 MHz initiation-interval-one SHA3T engine and prevents nonce
+space exhaustion with automatic 7.5-second `extranonce2` rolling.
+
+| Verified metric | Result |
+|---|---:|
+| Six-card effective pool hashrate | **2.887 GH/s** |
+| Gain over the pre-fix 1.504 GH/s sample | **+91.95%** |
+| Average per FK33 | **481.17 MH/s** |
+| Share-derived rate vs. 3.000 GH/s design rate | **96.23%** |
+| Rejected shares in the measured validation | **0** |
+| Whole-rig AC power | **306 W** |
+| Whole-rig efficiency at the wall | **9.43 MH/s/W** |
+
+The 306 W measurement includes the complete Octominer host, six cards, chassis
+fans, PSU losses, and other PSU load. It is not FPGA-only board power. See
+[docs/PERFORMANCE.md](docs/PERFORMANCE.md) for the test details and caveats.
+
+## Hardware evidence
 
 - Target: SQRL FK33 / `xcvu33p-fsvh2104-2-e`
-- Hash clock: 350 MHz
-- Architecture: 80 pipes with three active TOKEN3 contexts
-- Routed timing: WNS `+0.031 ns`, TNS `0.000 ns`
-- Routing: 642,228 fully routed nets, zero routing errors
+- Hash clock: 500 MHz
+- Architecture: one accepted nonce per clock after pipeline fill
+- Routed timing: WNS `+0.336 ns`, TNS `0.000 ns`, WHS `+0.010 ns`
+- Routing: 360,460 fully routed nets, zero routing errors
+- Utilization: 146,822 LUTs (33.39%), 359,255 registers (40.85%)
 - Protocol: 117-byte job frame in, 45-byte share frame out
-- Physical fleet validation: five FK33s, five TCP transports, five miners
-- Reboot validation: automatic programming and fresh accepted shares on all
-  five cards without Vivado
+- Physical validation: six FK33s, six transports, six accepted-share streams
+- Prebuilt image: uncompressed for legacy SQRL-loader compatibility
 
-This is experimental hardware software, not a guaranteed-profit product.
+## Why fresh-work rolling matters
 
-## What changed in v0.2.1
-
-The old beta tried to run a separate SQRL process for every card. The SQRL
-bridge owns and scans the complete FTDI fleet, so that design caused collisions.
-This release runs exactly one bridge process and maps consecutive TCP ports to
-independent Python miners. Serial-to-port mapping is checked before a miner may
-connect.
-
-The authorized patched SQRL executable is now bundled. Its provenance,
-checksums, two byte-level modifications, and permission record are in
-[third_party/sqrl](third_party/sqrl).
+A 500 MH/s engine scans all `2^32` nonce values in about 8.59 seconds. If a
+pool job lasts longer, restarting the same nonce range produces duplicate work.
+This runtime rolls `extranonce2` every 7.5 seconds, rebuilding the coinbase,
+Merkle root, header, and tag before exhaustion. Every candidate is still
+recomputed in Python and checked against the target before submission.
 
 ## Safety
 
-Programming an FPGA replaces its active configuration. Stop every other Vivado,
-hardware-server, USB/IP, or SQRL process that can control these cards. The
-supplied image is only for an FK33 XCVU33P. Sustained 350 MHz operation requires
-suitable power and cooling.
+Programming replaces the FPGA's active configuration. Stop every other Vivado,
+hardware-server, USB/IP, or SQRL process that can control the cards. The image
+is only for an FK33 XCVU33P. Sustained 500 MHz operation requires adequate
+power and cooling. No voltage change is performed by this software.
 
-The SQRL bridge listens on all interfaces. Firewall the configured port range
-or use an isolated mining network.
+The SQRL bridge listens on all interfaces. Firewall its port range or use an
+isolated mining network. This is experimental hardware software, not a
+profitability guarantee.
 
 ## Developer fee
 
@@ -55,8 +68,7 @@ Developer wallet:
 fjarcode:qq5daj4gl6q7t7hpwm2e5vu84gn4p3h7huu4h64z9l
 ```
 
-On a solo pool, a block found during the developer window belongs entirely to
-the developer wallet. Read [docs/DEV_FEE.md](docs/DEV_FEE.md).
+Read [docs/DEV_FEE.md](docs/DEV_FEE.md).
 
 ## Runtime requirements
 
@@ -69,7 +81,7 @@ the developer wallet. Read [docs/DEV_FEE.md](docs/DEV_FEE.md).
 - serial-specific USB access and permission to release `ftdi_sio`
 - firewall protection for the SQRL TCP port range
 
-The SQRL bridge is bundled under the permission described in
+The authorized SQRL bridge is bundled as documented in
 [THIRD_PARTY.md](THIRD_PARTY.md). Legacy ncurses/tinfo libraries are not
 bundled.
 
@@ -93,8 +105,7 @@ done
 
 ## Install a fleet
 
-List cards in the bridge's physical scan order and assign consecutive ports.
-Installation does not program hardware unless `--start` is supplied.
+List cards in physical bridge scan order and assign consecutive ports:
 
 ```bash
 ./install.sh \
@@ -106,18 +117,14 @@ Installation does not program hardware unless `--start` is supplied.
   --enable-linger
 ```
 
-`--install-udev` and `--enable-linger` use noninteractive sudo and fail
-rather than prompt. Configure sudo access deliberately before using those
-options. Review the generated files under
-`~/.config/fk33-fjar-miner/`, then start:
+Review `~/.config/fk33-fjar-miner/`, then start:
 
 ```bash
 ./start-fleet.sh
 ```
 
-If USB scan order changes, the per-card readiness check refuses a mismatched
-serial-to-port mapping. Re-run the installer with the observed order; do not
-bypass the check.
+If USB scan order changes, serial-to-port validation fails closed. Re-run the
+installer with the observed order; do not bypass the check.
 
 ## Monitor and stop
 
@@ -128,24 +135,13 @@ bypass the check.
 ./disable-fleet.sh
 ```
 
-Persistent `MISMATCH`, comparator-disagreement, or rejected-share messages are
-a stop condition.
+Persistent mismatch, comparator-disagreement, digest-mismatch, or rejected
+share messages are a stop condition.
 
 ## Build from RTL
 
-Developers can rebuild the image with Vivado 2026.1. End users do not perform
-this step. See [docs/BUILD.md](docs/BUILD.md).
-
-## Contents
-
-- `hardware/source/` — SystemVerilog, constraints, probe, and build flow
-- `hardware/prebuilt/` — tested standalone mining bitstream
-- `hardware/reports/` — route, timing, and utilization evidence
-- `runtime/` — fleet orchestration, framed transport, Stratum, and validation
-- `systemd/` — shared bridge and per-card miner units
-- `third_party/sqrl/` — authorized bridge, provenance, and exact patch record
-- `tests/` — offline protocol and scheduling tests
-- `docs/` — build, fee, service, and validation documentation
+The complete 500 MHz source and gated Vivado 2026.1 build flow are under
+`hardware/source/ii1_500/`. See [docs/BUILD.md](docs/BUILD.md).
 
 The miner requires only a public payout address. Never provide a private key,
 seed phrase, wallet backup, passphrase, exchange password, or RPC credential.

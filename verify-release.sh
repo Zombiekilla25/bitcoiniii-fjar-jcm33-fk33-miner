@@ -35,14 +35,17 @@ PY
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 printf '\nChecking shell syntax...\n'
-for script in ./*.sh runtime/*.sh hardware/source/*.sh; do
+for script in ./*.sh runtime/*.sh hardware/source/*.sh hardware/source/*/*.sh; do
     bash -n "$script"
 done
 
 printf '\nChecking Tcl completeness...\n'
 if command -v tclsh >/dev/null 2>&1; then
     tclsh <<'TCL'
-set files [glob -nocomplain hardware/source/*.tcl]
+set files [concat \
+    [glob -nocomplain hardware/source/*.tcl] \
+    [glob -nocomplain hardware/source/*/*.tcl] \
+]
 foreach file $files {
     set channel [open $file r]
     set source [read $channel]
@@ -73,10 +76,11 @@ else
 fi
 
 printf '\nChecking release invariants...\n'
-[[ $(<VERSION) == 0.2.1-beta ]]
-grep -Fq 'VERSION="0.2.1-beta"' install.sh
+[[ $(<VERSION) == 0.3.0-beta ]]
+grep -Fq 'VERSION="0.3.0-beta"' install.sh
 grep -Fq 'USER_WALLET = os.environ.get("FJAR_WALLET", "").strip()' \
     runtime/fjar_bridge.py
+grep -Fq 'FJAR_WORK_ROLL_SECONDS' runtime/fjar_bridge.py
 
 EXPECTED_DEV_WALLET='fjarcode:qq5daj4gl6q7t7hpwm2e5vu84gn4p3h7huu4h64z9l'
 EMBEDDED_ADDRESSES=$(grep -Eo 'fjarcode:[a-z0-9]{20,120}' \
@@ -87,12 +91,15 @@ if [[ "$EMBEDDED_ADDRESSES" != "$EXPECTED_DEV_WALLET" ]]; then
     exit 1
 fi
 
-test -s hardware/prebuilt/fk33_fjar_bscan_350.bit
-grep -Fq 'COMPRESS=FALSE' <(file hardware/prebuilt/fk33_fjar_bscan_350.bit)
+EXPECTED_BIT_SHA='efe740723b4ef4d93b29339cdeea32416495aabea8f78cb15f3456c44a354ecb'
+printf '%s  %s\n' "$EXPECTED_BIT_SHA" \
+    hardware/prebuilt/fk33_fjar_bscan_500.bit | sha256sum --check
+test -s hardware/prebuilt/fk33_fjar_bscan_500.bit
+grep -Fq 'COMPRESS=FALSE' <(file hardware/prebuilt/fk33_fjar_bscan_500.bit)
 grep -Fq 'All user specified timing constraints are met.' \
-    hardware/reports/fk33_fjar_bscan_350_timing.rpt
+    hardware/reports/fk33_fjar_bscan_500_timing.rpt
 grep -Eq '# of nets with routing errors[^:]*:[[:space:]]+0' \
-    hardware/reports/fk33_fjar_bscan_350_route_status.rpt
+    hardware/reports/fk33_fjar_bscan_500_route_status.rpt
 
 EXPECTED_BRIDGE_SHA='8c7230f0bf586e9297dc0e568bd19278aeeb7cff8dbb3dde150811f11393218a'
 printf '%s  %s\n' "$EXPECTED_BRIDGE_SHA" \
