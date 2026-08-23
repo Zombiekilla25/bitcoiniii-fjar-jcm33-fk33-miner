@@ -76,8 +76,8 @@ else
 fi
 
 printf '\nChecking release invariants...\n'
-[[ $(<VERSION) == 0.3.0-beta ]]
-grep -Fq 'VERSION="0.3.0-beta"' install.sh
+[[ $(<VERSION) == 0.4.0-beta ]]
+grep -Fq 'VERSION="0.4.0-beta"' install.sh
 grep -Fq 'USER_WALLET = os.environ.get("FJAR_WALLET", "").strip()' \
     runtime/fjar_bridge.py
 grep -Fq 'FJAR_WORK_ROLL_SECONDS' runtime/fjar_bridge.py
@@ -91,15 +91,29 @@ if [[ "$EMBEDDED_ADDRESSES" != "$EXPECTED_DEV_WALLET" ]]; then
     exit 1
 fi
 
-EXPECTED_BIT_SHA='efe740723b4ef4d93b29339cdeea32416495aabea8f78cb15f3456c44a354ecb'
-printf '%s  %s\n' "$EXPECTED_BIT_SHA" \
+EXPECTED_BIT_500_SHA='efe740723b4ef4d93b29339cdeea32416495aabea8f78cb15f3456c44a354ecb'
+printf '%s  %s\n' "$EXPECTED_BIT_500_SHA" \
     hardware/prebuilt/fk33_fjar_bscan_500.bit | sha256sum --check
-test -s hardware/prebuilt/fk33_fjar_bscan_500.bit
-grep -Fq 'COMPRESS=FALSE' <(file hardware/prebuilt/fk33_fjar_bscan_500.bit)
-grep -Fq 'All user specified timing constraints are met.' \
-    hardware/reports/fk33_fjar_bscan_500_timing.rpt
-grep -Eq '# of nets with routing errors[^:]*:[[:space:]]+0' \
-    hardware/reports/fk33_fjar_bscan_500_route_status.rpt
+
+EXPECTED_BIT_525_SHA='64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c'
+printf '%s  %s\n' "$EXPECTED_BIT_525_SHA" \
+    hardware/prebuilt/fk33_fjar_bscan_525.bit | sha256sum --check
+
+EXPECTED_RUNTIME_SHA='6578399d1b1d000e46223ee7aef256e1bf081b8540f512261e6b9b06a376322b'
+printf '%s  %s\n' "$EXPECTED_RUNTIME_SHA" \
+    runtime/fjar_bridge.py | sha256sum --check
+grep -Fq 'fk33_fjar_bscan_525.bit' runtime/start-sqrl-fleet.sh
+
+for CLOCK in 500 525; do
+    BIT="hardware/prebuilt/fk33_fjar_bscan_${CLOCK}.bit"
+    TIMING="hardware/reports/fk33_fjar_bscan_${CLOCK}_timing.rpt"
+    ROUTE="hardware/reports/fk33_fjar_bscan_${CLOCK}_route_status.rpt"
+
+    test -s "$BIT"
+    grep -Fq 'COMPRESS=FALSE' <(file "$BIT")
+    grep -Fq 'All user specified timing constraints are met.' "$TIMING"
+    grep -Eq '# of nets with routing errors[^:]*:[[:space:]]+0' "$ROUTE"
+done
 
 EXPECTED_BRIDGE_SHA='8c7230f0bf586e9297dc0e568bd19278aeeb7cff8dbb3dde150811f11393218a'
 printf '%s  %s\n' "$EXPECTED_BRIDGE_SHA" \
@@ -143,7 +157,7 @@ grep -Fq '4381283543d0c39650463f7ad8a91874eaeb0c5b2884be263fc4f9ab7bd19ec5' \
 printf '\nChecking private identifiers...\n'
 if grep -RInE \
     'rmann|Host[[:space:]]*:[[:space:]]*RGB|153300000[0-9]{3}|153300001064|bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu' \
-    . --binary-files=without-match --exclude-dir=.git \
+    . --binary-files=without-match --exclude-dir=.git --exclude=.git \
     --exclude=SHA256SUMS --exclude=verify-release.sh; then
     printf 'Private identifier audit failed.\n' >&2
     exit 1

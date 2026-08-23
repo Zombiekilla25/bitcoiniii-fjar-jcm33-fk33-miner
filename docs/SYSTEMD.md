@@ -3,7 +3,7 @@
 The runtime uses one user-level bridge service and one miner service per card.
 
 ```text
-~/.local/share/fk33-fjar-miner/0.3.0-beta/       installed release
+~/.local/share/fk33-fjar-miner/0.4.0-beta/       installed release
 ~/.local/share/fk33-fjar-miner/current           active release symlink
 ~/.local/share/fk33-fjar-miner/private/           bridge and ABI libraries
 ~/.config/fk33-fjar-miner/miner.env               wallet and pool

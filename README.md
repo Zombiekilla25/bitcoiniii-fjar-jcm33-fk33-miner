@@ -5,41 +5,45 @@ Standalone SHA3-256T FPGA mining software for the SQRL Forest Kitten 33
 the cards and one Python miner handles each independent TCP transport. Vivado
 is not required on the runtime host.
 
-## v0.3.0-beta: nearly 3 GH/s from six FK33s
+## v0.4.0-beta: verified 525 MHz fleet release
 
-The hardware-tested `v0.3.0-beta` release moves the standalone fleet to a
-timing-clean 500 MHz initiation-interval-one SHA3T engine and prevents nonce
-space exhaustion with automatic 7.5-second `extranonce2` rolling.
+The hardware-tested `v0.4.0-beta` release raises the standalone FK33 fleet
+clock from 500 MHz to 525 MHz while retaining the authenticated 500 MHz image
+as a rollback artifact. The deployed fresh-work runtime and service-level
+serial-to-port validation remain part of the release.
 
 | Verified metric | Result |
 |---|---:|
-| Six-card effective pool hashrate | **2.887 GH/s** |
-| Gain over the pre-fix 1.504 GH/s sample | **+91.95%** |
-| Average per FK33 | **481.17 MH/s** |
-| Share-derived rate vs. 3.000 GH/s design rate | **96.23%** |
-| Rejected shares in the measured validation | **0** |
-| Whole-rig AC power | **306 W** |
-| Whole-rig efficiency at the wall | **9.43 MH/s/W** |
+| Six-card effective pool hashrate | **3.172 GH/s** |
+| Gain over the measured 2.887 GH/s 500 MHz baseline | **+9.87%** |
+| Average per FK33 | **528.67 MH/s** |
+| Share-derived rate vs. 3.150 GH/s design rate | **100.70%** |
+| Submitted / accepted shares in the sample | **680 / 680** |
+| Rejected shares, duplicates, and runtime faults | **0 / 0 / 0** |
 
-The 306 W measurement includes the complete Octominer host, six cards, chassis
-fans, PSU losses, and other PSU load. It is not FPGA-only board power. See
-[docs/PERFORMANCE.md](docs/PERFORMANCE.md) for the test details and caveats.
+The 100.70% short-window result reflects normal share variance; it is not a
+claim that the hardware exceeds its clock-derived design rate. The measurement
+covered 660 seconds with all six cards continuously active. A contemporaneous
+525 MHz whole-rig power measurement was not available, so this release makes
+no 525 MHz efficiency claim. See
+[docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
 ## Hardware evidence
 
 - Target: SQRL FK33 / `xcvu33p-fsvh2104-2-e`
-- Hash clock: 500 MHz
-- Architecture: one accepted nonce per clock after pipeline fill
-- Routed timing: WNS `+0.336 ns`, TNS `0.000 ns`, WHS `+0.010 ns`
-- Routing: 360,460 fully routed nets, zero routing errors
-- Utilization: 146,822 LUTs (33.39%), 359,255 registers (40.85%)
+- Hash clock: 525 MHz
+- Architecture: initiation interval one; one nonce tested per clock
+- Routed timing: WNS `+0.056 ns`, TNS `0.000 ns`, WHS `+0.010 ns`
+- Routing: fully routed with zero routing errors
 - Protocol: 117-byte job frame in, 45-byte share frame out
 - Physical validation: six FK33s, six transports, six accepted-share streams
-- Prebuilt image: uncompressed for legacy SQRL-loader compatibility
+- Default image: authenticated uncompressed 525 MHz bitstream
+- Rollback image: authenticated uncompressed 500 MHz bitstream
+- Legacy SQRL-loader compatibility: bitstream compression disabled
 
 ## Why fresh-work rolling matters
 
-A 500 MH/s engine scans all `2^32` nonce values in about 8.59 seconds. If a
+A 525 MH/s engine scans all `2^32` nonce values in about 8.18 seconds. If a
 pool job lasts longer, restarting the same nonce range produces duplicate work.
 This runtime rolls `extranonce2` every 7.5 seconds, rebuilding the coinbase,
 Merkle root, header, and tag before exhaustion. Every candidate is still
@@ -49,7 +53,7 @@ recomputed in Python and checked against the target before submission.
 
 Programming replaces the FPGA's active configuration. Stop every other Vivado,
 hardware-server, USB/IP, or SQRL process that can control the cards. The image
-is only for an FK33 XCVU33P. Sustained 500 MHz operation requires adequate
+is only for an FK33 XCVU33P. Sustained 525 MHz operation requires adequate
 power and cooling. No voltage change is performed by this software.
 
 The SQRL bridge listens on all interfaces. Firewall its port range or use an
@@ -140,8 +144,8 @@ share messages are a stop condition.
 
 ## Build from RTL
 
-The complete 500 MHz source and gated Vivado 2026.1 build flow are under
-`hardware/source/ii1_500/`. See [docs/BUILD.md](docs/BUILD.md).
+The complete 525 MHz source and gated Vivado 2026.1 build flow are under
+`hardware/source/ii1_525/`. See [docs/BUILD.md](docs/BUILD.md).
 
 The miner requires only a public payout address. Never provide a private key,
 seed phrase, wallet backup, passphrase, exchange password, or RPC credential.

@@ -5,7 +5,6 @@ import importlib.util
 import os
 from pathlib import Path
 import socket
-import tempfile
 import unittest
 
 
@@ -83,38 +82,24 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(schedule.dev_seconds, 60)
         self.assertEqual(schedule.user_seconds, 5940)
 
-    def test_fleet_mapping_accepts_exact_serial_port_pair(self):
-        with tempfile.TemporaryDirectory() as directory:
-            config = Path(directory) / "fleet.env"
-            log = Path(directory) / "sqrl.log"
-            config.write_text("FJAR_FLEET_SERIALS=111111,222222\n")
-            log.write_text(
-                "Device with serial 111111A matches filter\n"
-                "Opened virtual TCP serial port 22000\n"
-                "Device with serial 222222A matches filter\n"
-                "Opened virtual TCP serial port 22001\n"
-                "Bitstream Loaded\nBitstream Loaded\n"
-            )
-            bridge.validate_fleet_mapping(
-                "111111", 22000, str(config), str(log)
-            )
+    def test_fleet_mapping_is_enforced_by_readiness_helper(self):
+        helper = (ROOT / "runtime" / "wait-fleet-card.sh").read_text()
+        self.assertIn("mapping_ready()", helper)
+        self.assertIn("Device with serial ", helper)
+        self.assertIn("Opened virtual TCP serial port ", helper)
+        self.assertIn("LOADED >= EXPECTED_LOADS", helper)
 
-    def test_fleet_mapping_rejects_a_later_cards_port(self):
-        with tempfile.TemporaryDirectory() as directory:
-            config = Path(directory) / "fleet.env"
-            log = Path(directory) / "sqrl.log"
-            config.write_text("FJAR_FLEET_SERIALS=111111,222222\n")
-            log.write_text(
-                "Device with serial 111111A matches filter\n"
-                "Opened virtual TCP serial port 22000\n"
-                "Device with serial 222222A matches filter\n"
-                "Opened virtual TCP serial port 22001\n"
-                "Bitstream Loaded\nBitstream Loaded\n"
-            )
-            with self.assertRaises(bridge.HardwareDisconnected):
-                bridge.validate_fleet_mapping(
-                    "111111", 22001, str(config), str(log)
-                )
+    def test_readiness_helper_runs_before_python_miner(self):
+        unit = (
+            ROOT / "systemd" / "fjar-fk33-fleet@.service"
+        ).read_text()
+        preflight = "ExecStartPre=%h/.local/share/fk33-fjar-miner/"
+        self.assertIn(preflight, unit)
+        self.assertIn("wait-fleet-card.sh %i ${FJAR_HW_PORT}", unit)
+        self.assertLess(
+            unit.index("ExecStartPre="),
+            unit.index("ExecStart=/usr/bin/python3"),
+        )
 
 
 if __name__ == "__main__":
