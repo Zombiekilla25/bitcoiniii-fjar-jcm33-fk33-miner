@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.0-beta — 2026-08-23
+
+- Added the timing-clean, fully routed 525 MHz initiation-interval-one image.
+- Added the authenticated uncompressed 525 MHz prebuilt bitstream, complete
+  source, and routed timing, utilization, congestion, and route reports.
+- Made 525 MHz the default fleet image while retaining the authenticated
+  500 MHz image as an included rollback artifact.
+- Updated to the physically deployed fresh-work runtime.
+- Kept serial-to-port validation fail-closed in the systemd readiness helper.
+- Measured six cards at 3.172 GH/s over 660 seconds, a 9.87% gain over the
+  measured 2.887 GH/s 500 MHz baseline.
+- Recorded 680 submitted and 680 accepted shares with zero rejects,
+  duplicates, or runtime faults.
+- Made no 525 MHz power or wall-efficiency claim because contemporaneous
+  whole-rig power telemetry was unavailable.
+
 ## 0.3.0-beta — 2026-08-22
 
 - Added a hardware-validated 500 MHz initiation-interval-one SHA3T engine.

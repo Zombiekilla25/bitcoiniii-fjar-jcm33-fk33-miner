@@ -89,6 +89,7 @@ class SubmissionTests(unittest.TestCase):
             "extranonce2": "0000000000000000",
             "ntime": "12345678",
             "fee_mode": bridge.USER_MODE,
+            "difficulty": 16.0,
         }
 
         bridge.submit(sock, job, 0x1234ABCD)
@@ -98,6 +99,10 @@ class SubmissionTests(unittest.TestCase):
         self.assertEqual(
             bridge.pending_submits[100]["fee_mode"],
             bridge.USER_MODE,
+        )
+        self.assertEqual(
+            bridge.pending_submits[100]["difficulty"],
+            16.0,
         )
 
 

@@ -1,56 +1,31 @@
-# FK33 500 MHz performance validation
+# FK33 525 MHz performance validation
 
-The `v0.3.0-beta` release was validated on six SQRL FK33 cards using the
-500 MHz initiation-interval-one SHA3-256T engine and the standalone framed
-BSCAN transport.
-
-## Headline result
+The `v0.4.0-beta` release was physically validated on six SQRL FK33 cards.
 
 | Metric | Result |
 |---|---:|
-| Six-card effective pool hashrate before fresh-work rolling | 1.504 GH/s |
-| Six-card effective pool hashrate after fresh-work rolling | 2.887 GH/s |
-| Effective pool-hashrate gain | **+91.95%** |
-| Average per FK33 | 481.17 MH/s |
-| Six-card design rate | 3.000 GH/s |
-| Achieved share-derived rate vs. design rate | 96.23% |
-| Rejected shares during the measured validation | 0 |
+| 500 MHz fleet baseline | 2.887 GH/s |
+| 525 MHz fleet result | **3.172 GH/s** |
+| Improvement | **+9.87%** |
+| Average per FK33 | 528.67 MH/s |
+| Clock-derived design rate | 3.150 GH/s |
+| Submitted / accepted | 680 / 680 |
+| Rejects / duplicates / faults | 0 / 0 / 0 |
+| Measurement window | 660 seconds |
 
-At 500 MH/s, a card exhausts a 32-bit nonce range in about 8.59 seconds.
-Long-lived Stratum jobs therefore caused repeated candidates and capped useful
-work well below the physical engine rate. The runtime now rolls `extranonce2`
-every 7.5 seconds, rebuilding the coinbase, Merkle root, header, and tag before
-the nonce range repeats. Hardware and Python digest verification still occurs
-before every submission.
+Per-card rates were 551.05, 463.20, 513.05, 581.48, 535.24, and
+528.03 MH/s. Public card identifiers are intentionally omitted.
 
-## Power and efficiency
+The calculation used the exact target associated with each submitted share.
+The measured 100.70% of design rate reflects normal short-window share
+variance, not operation beyond the 525 MHz clock-derived rate.
 
-The Octominer PSU reported the following while all six cards remained mining:
+A 525 MH/s engine exhausts the 32-bit nonce range in approximately 8.18
+seconds. The runtime rolls `extranonce2` every 7.5 seconds before repetition.
 
-| Measurement | Result |
-|---|---:|
-| Whole-rig AC power | 306 W |
-| Whole-rig DC output | 279 W |
-| AC voltage / current | 230.5 V / 1.33 A |
-| AC efficiency | 9.43 MH/s/W |
-| Energy per gigahash at the wall | 106.0 J/GH |
-| PSU temperatures | 31 C / 49 C |
-| PSU fan | 1,680 RPM |
+No contemporaneous 525 MHz whole-rig power sample was available. The earlier
+306 W measurement applies only to the 500 MHz validation; this release makes
+no measured 525 MHz power or efficiency claim.
 
-The 306 W figure is whole-rig input power. It includes the six FPGA cards,
-host, chassis fans, PSU conversion losses, and any other load on that PSU; it
-is not an FPGA-only board-power measurement.
-
-## Validation gates
-
-- Six authenticated FK33s loaded the 500 MHz image.
-- Every card produced a hardware/Python digest match.
-- Every card produced pool-accepted shares.
-- The shared SQRL bridge remained running during the runtime-only rollout.
-- Fresh-work rolling raised the measured fleet rate to 2.887 GH/s.
-- No voltage command was issued.
-- No rejected shares or digest/comparator errors occurred in the measured run.
-
-Mining results vary with pool difficulty, job cadence, network latency,
-temperature, device quality, and measurement-window length. This beta is
-experimental hardware software, not a profitability guarantee.
+All six services remained active. No rejected shares, duplicate shares,
+digest faults, comparator faults, runtime faults, or voltage commands occurred.

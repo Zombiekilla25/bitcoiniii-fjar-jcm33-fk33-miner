@@ -1,43 +1,33 @@
 # Developer bitstream build
 
-End users use `hardware/prebuilt/fk33_fjar_bscan_500.bit` and do not need
-Vivado. The validated developer toolchain was Vivado 2026.1 on Ubuntu 24.04
-x86-64 targeting `xcvu33p-fsvh2104-2-e`.
+End users use `hardware/prebuilt/fk33_fjar_bscan_525.bit` and do not need
+Vivado. The authenticated 500 MHz image remains included for rollback.
 
-## Offline runtime tests
+The validated toolchain was Vivado 2026.1 on Ubuntu 24.04 x86-64 targeting
+`xcvu33p-fsvh2104-2-e`.
 
-```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
-```
+## Build the 525 MHz image
 
-## 500 MHz image
+Run `cd hardware/source/ii1_525`, followed by `./run_build.sh`.
 
-```bash
-cd hardware/source/ii1_500
-./run_build.sh
-```
-
-The runner first requires `SHA3T II1 RAW DIGEST ALL PASS`, then performs
-synthesis, implementation, routing, setup/hold timing gates, and uncompressed
-bitstream generation. Expected output:
-
-```text
-FK33 FJAR II1 BSCAN 500 MHZ FULL BUILD COMPLETE
-```
+The runner requires the SHA3T known-answer simulation to pass before synthesis,
+implementation, routing, setup/hold timing gates, and uncompressed bitstream
+generation.
 
 ## Validated routed result
 
-- Hash clock: 500.000 MHz
-- WNS: `+0.336 ns`
+- Hash clock: 525.000 MHz
+- WNS: `+0.056 ns`
 - TNS: `0.000 ns`
 - WHS: `+0.010 ns`
 - Timing-failing endpoints: 0
-- Fully routed nets: 360,460
 - Routing errors: 0
-- CLB LUTs: 146,822 / 439,680 (33.39%)
-- CLB registers: 359,255 / 879,360 (40.85%)
-- Bitstream compression: disabled for legacy SQRL-loader compatibility
-- Bitstream SHA256: `efe740723b4ef4d93b29339cdeea32416495aabea8f78cb15f3456c44a354ecb`
+- Compression disabled for legacy SQRL-loader compatibility
+- Bitstream SHA256:
+  `64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c`
 
-Do not distribute a newly generated image until its known-answer simulation,
-route, setup, hold, physical digest, and accepted-share gates all pass.
+Timing, utilization, hierarchy, congestion, and route reports are included
+under `hardware/reports/`.
+
+Do not distribute a generated image until simulation, routing, setup, hold,
+physical digest, and accepted-share gates all pass.
