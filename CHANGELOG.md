@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- Added a portable `start.sh` launcher with automatic serial discovery,
+  card-count cross-checking, checksum pinning, per-card workers, dry-run,
+  status, log, and guarded stop commands.
+- Added serial-specific FTDI vendor/product and device-access validation plus
+  controlled `ftdi_sio` release for the selected cards.
+- Made the hardware-validated 525 MHz image the portable launcher's safe
+  default.
+- Added the checksum-pinned 550 MHz bitstream as an explicitly selected,
+  unqualified experimental candidate. It is not enabled by the installer or
+  systemd fleet path and is not described as timing-signed or hardware
+  validated.
+- Preserved the no-voltage-change policy and required an explicit override for
+  any unpinned bitstream.
+
 ## 0.4.0-beta — 2026-08-23
 
 - Added the timing-clean, fully routed 525 MHz initiation-interval-one image.

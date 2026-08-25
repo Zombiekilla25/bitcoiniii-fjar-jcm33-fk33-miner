@@ -99,6 +99,18 @@ EXPECTED_BIT_525_SHA='64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff1
 printf '%s  %s\n' "$EXPECTED_BIT_525_SHA" \
     hardware/prebuilt/fk33_fjar_bscan_525.bit | sha256sum --check
 
+EXPECTED_BIT_550_SHA='de9621edb8fdb1df35270ac601668b0b30ada110c5ed446114755c7093a2e8db'
+printf '%s  %s\n' "$EXPECTED_BIT_550_SHA" \
+    hardware/prebuilt/fk33_fjar_bscan_550_experimental.bit | sha256sum --check
+file hardware/prebuilt/fk33_fjar_bscan_550_experimental.bit |
+    grep -Fq 'COMPRESS=FALSE'
+
+grep -Fq "$EXPECTED_BIT_525_SHA" start.sh
+grep -Fq "$EXPECTED_BIT_550_SHA" start.sh
+grep -Fq -- '--experimental-550' start.sh
+grep -Fq 'readonly VERSION="0.1.0-rc1"' start.sh
+grep -Fq '/sys/bus/usb/drivers/ftdi_sio/unbind' start.sh
+
 EXPECTED_RUNTIME_SHA='6578399d1b1d000e46223ee7aef256e1bf081b8540f512261e6b9b06a376322b'
 printf '%s  %s\n' "$EXPECTED_RUNTIME_SHA" \
     runtime/fjar_bridge.py | sha256sum --check

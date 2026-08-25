@@ -95,6 +95,37 @@ bundled.
 ./verify-release.sh
 ```
 
+## Portable quick start
+
+The top-level launcher detects FK33 USB/JTAG serials, assigns consecutive
+ports, starts one shared SQRL bridge plus one miner per card, and keeps logs
+under `~/.local/state/fk33-fjar/`. It uses the six-card validated 525 MHz image
+by default and does not change voltage.
+
+```bash
+chmod +x start.sh
+./start.sh doctor
+sudo -v                 # only needed when ftdi_sio must be released
+./start.sh --wallet 'fjarcode:YOUR_LOWERCASE_ADDRESS'
+```
+
+Use `./start.sh status`, `./start.sh logs`, and `./start.sh stop` for lifecycle
+control. Systems lacking ABI-5 ncurses/tinfo libraries must point
+`FK33_LIB_DIR` at an authorized compatibility-library directory.
+The launcher validates each selected serial as an FTDI `0403:6010` device and
+will release only those selected interfaces from `ftdi_sio`.
+
+The included 550 MHz image is a checksum-pinned but otherwise unqualified
+experimental candidate, not a timing-signed or hardware-validated release
+image. It is never selected by default and requires explicit acknowledgement:
+
+```bash
+./start.sh doctor --experimental-550
+./start.sh --wallet 'fjarcode:YOUR_LOWERCASE_ADDRESS' --experimental-550
+```
+
+Read [docs/EXPERIMENTAL_550.md](docs/EXPERIMENTAL_550.md) before selecting it.
+
 ## Find card serials
 
 ```bash
