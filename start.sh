@@ -10,7 +10,7 @@ set -Eeuo pipefail
 IFS=$'\n\t'
 
 readonly APP_NAME="fk33-fjar"
-readonly VERSION="0.1.0-rc2"
+readonly VERSION="0.1.0-rc3"
 readonly STABLE_BIT_SHA256="64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c"
 readonly EXPERIMENTAL_550_BIT_SHA256="de9621edb8fdb1df35270ac601668b0b30ada110c5ed446114755c7093a2e8db"
 readonly DEFAULT_POOL_HOST="stratum.pythonpool.dev"
@@ -418,6 +418,7 @@ show_plan() {
   say "bitstream:      $BITSTREAM"
   say "bitstream mode: $BITSTREAM_MODE"
   say "state/logs:     $STATE_DIR"
+  say "bridge cwd:     $STATE_DIR"
   say "USB/JTAG:       selected 0403:6010 devices only"
   say "voltage:        unchanged"
   say
@@ -518,14 +519,18 @@ start_fleet() {
   trap rollback_start ERR INT TERM
 
   info "programming ${#SERIALS[@]} card(s) and starting the local bridge"
-  LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
-    nohup "$BRIDGE" \
-      -s ",$serial_csv" \
-      -b "$BITSTREAM" \
-      -p "$BASE_PORT" \
-      -t \
-      -f "$STATE_DIR/logs/sqrl.log" \
-      >>"$STATE_DIR/logs/sqrl-console.log" 2>&1 &
+  (
+    # The legacy bridge creates ./virtual_ports without checking fopen().
+    # Run it from writable state storage, never from a read-only release tree.
+    cd "$STATE_DIR"
+    exec env LD_LIBRARY_PATH="$LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+      nohup "$BRIDGE" \
+        -s ",$serial_csv" \
+        -b "$BITSTREAM" \
+        -p "$BASE_PORT" \
+        -t \
+        -f "$STATE_DIR/logs/sqrl.log"
+  ) 9>&- >>"$STATE_DIR/logs/sqrl-console.log" 2>&1 &
   STARTED_BRIDGE_PID=$!
   printf '%s\n' "$STARTED_BRIDGE_PID" >"$STATE_DIR/pids/bridge.pid"
 
@@ -544,7 +549,8 @@ start_fleet() {
     FJAR_POOL_PORT="$POOL_PORT" \
     FJAR_HW_HOST="127.0.0.1" \
     FJAR_HW_PORT="$port" \
-      nohup python3 -u "$MINER" >>"$STATE_DIR/logs/worker-$serial.log" 2>&1 &
+      nohup python3 -u "$MINER" 9>&- \
+        >>"$STATE_DIR/logs/worker-$serial.log" 2>&1 &
     pid=$!
     STARTED_WORKER_PIDS+=("$pid")
     printf '%s\n' "$pid" >"$STATE_DIR/pids/worker-$serial.pid"
@@ -552,6 +558,8 @@ start_fleet() {
   done
 
   sleep 2
+  pid_matches "$STARTED_BRIDGE_PID" "$BRIDGE" ||
+    die "bridge exited after worker launch; inspect $STATE_DIR/logs/sqrl-console.log"
   for pid in "${STARTED_WORKER_PIDS[@]}"; do
     pid_matches "$pid" "$MINER" || die "a worker exited during startup; inspect $STATE_DIR/logs"
   done
