@@ -82,7 +82,7 @@ ed623ae6b4c8490e78b96530c1d13e590c4c02ae31d048ea7c3da560ede3baad  ./runtime/rele
 67e593c4e86b8531e1cf357892974fb8e517c4480430df7bf0acdb2c79034166  ./runtime/wait-fleet-card.sh
 2eac401d7f15aa25dbca453ea99d5b8d5503aea3139cf6e547da8a9d5b12dc9f  ./start-card.sh
 d93d386a5b1e67d0613788aa96fe508cf4442c184378454c7ef137755a5e5c56  ./start-fleet.sh
-effa525357253995d397646bf0cb0dfd3cd999f0ef2e2fbdc5ab32789a209c1a  ./start.sh
+299928f026d2a47438a3918d64acc47eb6d57cf39e715088f2c8c2dc4c0e8f3a  ./start.sh
 f28cc3dc71a4a1c706582c9a16ab3a42fb2e526b7ca42d1b095fa430a8a9a568  ./status-card.sh
 32beba8cd4243b8b0e03e1474624a70029052deee3bbb1d116b5ef7d9e47e436  ./status-fleet.sh
 f0eba6e25e00644bb8ad262a7f31124299504fc326928dcca458379f60221deb  ./systemd/99-fk33-sqrl.rules.example
@@ -100,4 +100,4 @@ b3ffe6b311d7175c2585dbb8c820eea5d9b8b585d978f162d3a69ff411907109  ./third_party/
 b495f9a552cdf2c6681643d860b4f514f93145500628d46767d1f90cd1575e68  ./third_party/sqrl/REDISTRIBUTION_PERMISSION.md
 c66475fa4d5016f7755bb5e3da3c60e1992f85be6847a4d72959fbc96fb5b8f7  ./third_party/sqrl/patch_rawjtag.py
 8c7230f0bf586e9297dc0e568bd19278aeeb7cff8dbb3dde150811f11393218a  ./third_party/sqrl/sqrl_bridge_rawjtag_coe
-5a6f81210ec620e45b3c768877aa914a2aedf64096c42a56a0c52e0ec73bad9b  ./verify-release.sh
+2e62b5e38af74ba8b8b58284224b67c06b9cf4cd2404f6ac366ea03ea967bbdb  ./verify-release.sh
