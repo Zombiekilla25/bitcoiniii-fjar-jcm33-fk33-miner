@@ -108,7 +108,7 @@ file hardware/prebuilt/fk33_fjar_bscan_550_experimental.bit |
 grep -Fq "$EXPECTED_BIT_525_SHA" start.sh
 grep -Fq "$EXPECTED_BIT_550_SHA" start.sh
 grep -Fq -- '--experimental-550' start.sh
-grep -Fq 'readonly VERSION="0.1.0-rc1"' start.sh
+grep -Fq 'readonly VERSION="0.1.0-rc2"' start.sh
 grep -Fq '/sys/bus/usb/drivers/ftdi_sio/unbind' start.sh
 
 EXPECTED_RUNTIME_SHA='6578399d1b1d000e46223ee7aef256e1bf081b8540f512261e6b9b06a376322b'
