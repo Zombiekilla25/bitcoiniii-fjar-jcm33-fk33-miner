@@ -10,7 +10,7 @@ set -Eeuo pipefail
 IFS=$'\n\t'
 
 readonly APP_NAME="fk33-fjar"
-readonly VERSION="0.1.0-rc1"
+readonly VERSION="0.1.0-rc2"
 readonly STABLE_BIT_SHA256="64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c"
 readonly EXPERIMENTAL_550_BIT_SHA256="de9621edb8fdb1df35270ac601668b0b30ada110c5ed446114755c7093a2e8db"
 readonly DEFAULT_POOL_HOST="stratum.pythonpool.dev"
@@ -197,7 +197,9 @@ detect_serials() {
     if [[ "$value" =~ ^1533[0-9]{8}$ ]]; then
       detected+="${detected:+ }$value"
     fi
-  done < <(find /sys/bus/usb/devices -maxdepth 3 -type f -name serial -print0 2>/dev/null)
+  # Entries below /sys/bus/usb/devices are symlinks into the sysfs device tree.
+  # Follow them or find(1) will report no serial files on normal Linux systems.
+  done < <(find -L /sys/bus/usb/devices -maxdepth 3 -type f -name serial -print0 2>/dev/null)
 
   normalize_serials "$detected"
 }
