@@ -1,7 +1,9 @@
 # FK33 FJAR Miner
 
-> Experimental BitcoinIII support: the repository also contains a deliberately
-> one-card-only BTC3 canary. See [docs/BTC3_CANARY.md](docs/BTC3_CANARY.md).
+> Experimental BitcoinIII support includes a deliberately one-card-only BTC3
+> canary and a gated fleet launcher for use after the canary produces matching
+> hardware/software hashes and an accepted share. See
+> [docs/BTC3_CANARY.md](docs/BTC3_CANARY.md).
 
 Standalone SHA3-256T FPGA mining software for the SQRL Forest Kitten 33
 (Xilinx/AMD Virtex UltraScale+ XCVU33P). One SQRL raw-JTAG fleet bridge owns

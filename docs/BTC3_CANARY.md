@@ -62,3 +62,43 @@ Stop the canary with:
 ```
 
 Do not start all cards until the one-card evidence has been reviewed.
+
+## Promote a passed canary to the fleet
+
+After the canary has produced a matching `hw=`/`sw=` digest and an accepted
+BTC3 share, stop it and build the selected serial list:
+
+```bash
+./start-btc3-canary.sh stop
+
+SERIALS=$(
+  grep -h . /sys/bus/usb/devices/*/serial 2>/dev/null |
+  grep -E '^1533[0-9]{8}$' |
+  sort -u |
+  paste -sd, -
+)
+
+echo "$SERIALS"
+```
+
+Run the fleet preflight:
+
+```bash
+./start-btc3.sh doctor \
+  --wallet 'bc1qYOUR_BTC3_ADDRESS' \
+  --serials "$SERIALS" \
+  --allow-card-count-mismatch
+```
+
+Then start the fleet with an explicit acknowledgement of the passed canary:
+
+```bash
+./start-btc3.sh start \
+  --wallet 'bc1qYOUR_BTC3_ADDRESS' \
+  --serials "$SERIALS" \
+  --allow-card-count-mismatch \
+  --canary-passed
+```
+
+The fleet launcher remains pinned to the 525 MHz SHA3-256T image and never
+changes FPGA voltage.

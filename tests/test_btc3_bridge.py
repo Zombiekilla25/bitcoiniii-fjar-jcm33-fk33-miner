@@ -42,5 +42,33 @@ class Btc3ConfigurationTests(unittest.TestCase):
         self.assertEqual(btc3.sha3t(payload), expected)
 
 
+class Btc3LauncherTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        root = pathlib.Path(__file__).parents[1]
+        cls.canary = (root / "start-btc3-canary.sh").read_text()
+        cls.fleet = (root / "start-btc3.sh").read_text()
+
+    def test_canary_still_requires_exactly_one_card(self):
+        self.assertIn(
+            "BTC3 canary requires exactly one --serials value", self.canary
+        )
+
+    def test_fleet_accepts_a_serial_list(self):
+        self.assertNotIn("requires exactly one --serials value", self.fleet)
+        self.assertIn("Comma/space-separated FK33 USB serials", self.fleet)
+
+    def test_fleet_requires_explicit_canary_acknowledgement(self):
+        self.assertIn("--canary-passed", self.fleet)
+        self.assertIn("CANARY_PASSED", self.fleet)
+
+    def test_fleet_stays_on_pinned_525_image(self):
+        self.assertIn(
+            "64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c",
+            self.fleet,
+        )
+        self.assertNotIn("experimental-550", self.fleet)
+
+
 if __name__ == "__main__":
     unittest.main()
