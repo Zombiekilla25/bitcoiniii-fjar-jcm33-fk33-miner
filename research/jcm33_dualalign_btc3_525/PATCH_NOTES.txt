@@ -1,0 +1,30 @@
+JCM33 dual-alignment production transport, test13
+
+Root cause fixed
+----------------
+Test12 proved the two physical USER2 inputs are alive and receive equal counts.
+Lane B sees a nine-bit DR word as 0:payload[7:0] (payload in low eight bits).
+Lane A sees it as payload[7:0]:0 (payload in high eight bits).  The released
+transport consumed only the first eight shifted bits and therefore converted
+every lane-A byte to `(byte << 1) & 0xff`.
+
+RTL change
+----------
+`fk33_bscan_transport.sv` now:
+
+1. captures all nine USER2 DR bits for each per-byte transaction;
+2. forms both candidate bytes, word[7:0] and word[8:1];
+3. locks to the candidate whose first byte is frame magic 0x46; and
+4. feeds every subsequent byte from that selected slice into the unchanged
+   frame/CRC parser.
+
+Everything after the USER2 byte decoder is unchanged: CRC framing, CDC,
+SHA3-256T II=1 engine, candidate validation, USER1 share framing, and the
+525 MHz clock target.
+
+Canary behavior
+---------------
+The host sends independent tail-padded jobs to lane A and lane B in one atomic
+XVC request.  It validates each hardware digest in software before submission.
+Success requires accepted_A > 0, accepted_B > 0, and zero digest mismatches.
+The package contains no restore image and never changes voltage.
