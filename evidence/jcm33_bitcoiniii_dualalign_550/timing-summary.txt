@@ -1,0 +1,10 @@
+JCM33 BitcoinIII dual-alignment 550 MHz timing gate
+
+FINAL SETUP WNS: 0.128 ns
+FINAL HOLD  WHS: 0.010 ns
+TIMING GATE PASS
+implementation_strategy=Performance_ExplorePostRoutePhysOpt
+bitstream_compression=FALSE
+
+The positive 0.010 ns hold margin is narrow. No higher clock is qualified by
+this evidence.

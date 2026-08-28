@@ -20,17 +20,35 @@ class Btc3ConfigurationTests(unittest.TestCase):
             )
         )
 
-    def test_canary_has_no_developer_wallet_rotation(self):
+    def test_bitcoiniii_developer_fee_policy(self):
         schedule = btc3.DevFeeSchedule(
             "test-card", fee_basis_points=btc3.DEV_FEE_BPS
         )
-        self.assertEqual(schedule.dev_seconds, 0)
-        for timestamp in (0, 1, 5999, 6000, 123456789):
-            self.assertEqual(schedule.mode_at(timestamp), btc3.USER_MODE)
-            self.assertEqual(
-                btc3.wallet_for_mode(schedule.mode_at(timestamp)),
-                btc3.USER_WALLET,
+        self.assertEqual(btc3.DEV_FEE_BPS, 100)
+        self.assertEqual(schedule.user_seconds, 5940)
+        self.assertEqual(schedule.dev_seconds, 60)
+        self.assertEqual(
+            btc3.DEV_WALLET,
+            "bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu",
+        )
+        self.assertEqual(btc3.wallet_for_mode(btc3.USER_MODE), btc3.USER_WALLET)
+        self.assertEqual(btc3.wallet_for_mode(btc3.DEV_MODE), btc3.DEV_WALLET)
+
+    def test_developer_worker_is_visibly_labeled(self):
+        self.assertEqual(btc3.worker_for_mode(btc3.USER_MODE), btc3.WORKER)
+        dev_worker = btc3.worker_for_mode(btc3.DEV_MODE)
+        self.assertTrue(dev_worker.endswith("-DEVFEE"))
+        self.assertLessEqual(len(dev_worker), 64)
+
+        original_worker = btc3.WORKER
+        try:
+            btc3.WORKER = "x" * 64
+            self.assertEqual(len(btc3.worker_for_mode(btc3.DEV_MODE)), 64)
+            self.assertTrue(
+                btc3.worker_for_mode(btc3.DEV_MODE).endswith("-DEVFEE")
             )
+        finally:
+            btc3.WORKER = original_worker
 
     def test_sha3t_is_three_sha3_256_rounds(self):
         import hashlib

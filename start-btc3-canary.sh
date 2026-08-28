@@ -377,6 +377,8 @@ show_plan() {
   say "cards:          ${#SERIALS[@]}"
   say "pool:           $POOL_HOST:$POOL_PORT"
   say "worker prefix:  $WORKER_PREFIX"
+  say "developer fee: 1.00% time-based"
+  say "dev worker:    <worker>-DEVFEE"
   say "bitstream:      $BITSTREAM"
   say "bitstream mode: $BITSTREAM_MODE"
   say "state/logs:     $STATE_DIR"

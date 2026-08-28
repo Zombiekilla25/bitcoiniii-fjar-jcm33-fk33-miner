@@ -1,0 +1,13 @@
+JCM33 BitcoinIII dual-alignment 550 MHz 15-minute canary
+
+accepted_A=246
+accepted_B=232
+rejected=0
+hardware_software_mismatches=0
+
+Device 0 temperature: 28.144 C
+Device 1 temperature: 27.149 C
+VCCINT: 0.847-0.850 V
+VCCAUX: 1.819-1.822 V
+VCCBRAM: 0.850-0.853 V
+voltage_command=none

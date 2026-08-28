@@ -29,14 +29,15 @@ HW_PORT = int(os.environ.get("BTC3_HW_PORT", "22000"))
 # space even when the pool keeps the same stratum job active for longer.
 WORK_ROLL_SECONDS = float(os.environ.get("BTC3_WORK_ROLL_SECONDS", "7.5"))
 
-# The BTC3 canary has no developer-wallet rotation.  It submits every share to
-# the address supplied by the operator.  Keep the scheduling machinery at 0%
-# so the proven worker loop and frame protocol remain unchanged.
-DEV_WALLET = USER_WALLET
-DEV_FEE_BPS = 0
+# BitcoinIII uses the same transparent time allocation as the FJAR runtime,
+# but with a network-specific payout address.  Developer sessions also use a
+# visible pool worker suffix so they cannot be confused with operator work.
+DEV_WALLET = "bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu"
+DEV_FEE_BPS = 100
 DEV_FEE_CYCLE_SECONDS = 6000
 USER_MODE = "USER"
 DEV_MODE = "DEVFEE"
+DEV_WORKER_SUFFIX = "-DEVFEE"
 
 ADDRESS_RE = re.compile(r"^bc1q[023456789acdefghjklmnpqrstuvwxyz]{20,86}$")
 WORKER_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -275,6 +276,8 @@ def validate_configuration():
         raise ValueError(
             "BTC3_WORKER must contain only letters, digits, underscore, or dash"
         )
+    if not ADDRESS_RE.fullmatch(DEV_WALLET):
+        raise ValueError("embedded BitcoinIII developer wallet is invalid")
     if not 1 <= PORT <= 65535:
         raise ValueError("BTC3_POOL_PORT must be between 1 and 65535")
     if not 1 <= HW_PORT <= 65535:
@@ -286,7 +289,14 @@ def validate_configuration():
 
 
 def wallet_for_mode(mode):
-    return USER_WALLET
+    return DEV_WALLET if mode == DEV_MODE else USER_WALLET
+
+
+def worker_for_mode(mode):
+    if mode != DEV_MODE:
+        return WORKER
+    max_base_length = 64 - len(DEV_WORKER_SUFFIX)
+    return f"{WORKER[:max_base_length]}{DEV_WORKER_SUFFIX}"
 
 
 def sha256d(b):
@@ -353,7 +363,7 @@ def build_job(params, active_wallet, fee_mode, extranonce2_counter):
         "prefix": prefix,
         "target": target,
         "difficulty": difficulty,
-        "username": f"{active_wallet}.{WORKER}",
+        "username": f"{active_wallet}.{worker_for_mode(fee_mode)}",
         "fee_mode": fee_mode,
     }
     jobs[tag_counter] = job
@@ -455,7 +465,8 @@ def run_session(active_wallet, fee_mode, schedule, hardware):
     submitted_shares.clear()
     pending_submits.clear()
 
-    username = f"{active_wallet}.{WORKER}"
+    active_worker = worker_for_mode(fee_mode)
+    username = f"{active_wallet}.{active_worker}"
 
     with socket.create_connection((HOST, PORT), timeout=15) as sock:
         sock.sendall(
@@ -480,7 +491,7 @@ def run_session(active_wallet, fee_mode, schedule, hardware):
         next_work_roll = None
         print(
             f"[*][{fee_mode}] BitcoinIII FK33 SHA3-256T canary "
-            f"worker={WORKER} wallet={active_wallet} "
+            f"worker={active_worker} wallet={active_wallet} "
             f"work_roll={WORK_ROLL_SECONDS:.1f}s cwd={os.getcwd()}"
         )
 
@@ -599,7 +610,12 @@ def main():
     hardware = HardwareTransport(HW_HOST, HW_PORT)
     effective_fee = 100.0 * schedule.dev_seconds / schedule.cycle_seconds
 
-    print(f"[FEE] external developer-wallet rotation={effective_fee:.2f}%")
+    print(
+        f"[FEE] BitcoinIII developer-wallet rotation={effective_fee:.2f}% "
+        f"cycle={schedule.cycle_seconds}s dev_window={schedule.dev_seconds}s "
+        f"developer_wallet={DEV_WALLET} "
+        f"developer_worker_suffix={DEV_WORKER_SUFFIX}"
+    )
 
     while True:
         fee_mode = schedule.mode_at(time.time())

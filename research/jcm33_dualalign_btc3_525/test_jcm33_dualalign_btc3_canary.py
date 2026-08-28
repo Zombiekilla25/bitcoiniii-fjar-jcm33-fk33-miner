@@ -65,6 +65,19 @@ class DualMinerTests(unittest.TestCase):
     def test_crc16_standard_vector(self):
         self.assertEqual(miner.crc16(b"123456789"), 0x29B1)
 
+    def test_bitcoiniii_developer_fee_is_visible_and_network_specific(self):
+        schedule = miner.DevFeeSchedule("test-jcm33")
+        self.assertEqual(miner.DEV_FEE_BPS, 100)
+        self.assertEqual((schedule.user_seconds, schedule.dev_seconds), (5940, 60))
+        self.assertEqual(
+            miner.DEV_WALLET,
+            "bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu",
+        )
+        self.assertEqual(miner.wallet_for_mode(miner.USER_MODE), miner.USER_WALLET)
+        self.assertEqual(miner.wallet_for_mode(miner.DEV_MODE), miner.DEV_WALLET)
+        self.assertEqual(miner.worker_for_mode(miner.USER_MODE), miner.WORKER)
+        self.assertTrue(miner.worker_for_mode(miner.DEV_MODE).endswith("-DEVFEE"))
+
     def test_production_job_wire_frame_is_117_bytes(self):
         job_a, _ = miner.build_job_pair(
             self.notify_params(), miner.USER_WALLET, miner.USER_MODE, 0

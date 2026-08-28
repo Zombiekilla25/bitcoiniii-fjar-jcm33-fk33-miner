@@ -4,16 +4,17 @@ Validated SHA3-256T FPGA mining software for two SQRL XCVU33P platforms:
 
 | Hardware | Network path | Validated image | Physical evidence |
 |---|---|---|---|
-| JCM33 dual-FPGA carrier | BitcoinIII | dual-alignment 525 MHz | 185 A + 211 B accepted, 0 rejected, 0 digest mismatches |
+| JCM33 dual-FPGA carrier | BitcoinIII | dual-alignment 550 MHz | 634 A + 650 B accepted, 0 rejected, 0 digest mismatches |
 | FK33 | FJAR | standalone 525 MHz | six-card 680/680 accepted-share fleet sample |
 | FK33 | BitcoinIII | guarded one-card canary and fleet launcher | promotion requires matching hardware/software hashes and an accepted share |
 
 The JCM33 and FK33 images use different physical transports and are not
-interchangeable. The validated JCM33 prebuilt is
-[`hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit`](hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit)
-with SHA-256 `2ef00b41b8b542cf4725336c7754e3b81e5a23aa710993fc0f5f8b2828e05a8d` (28329354 bytes). Its complete source, runner, and
-validation boundary are under
-[`research/jcm33_dualalign_btc3_525/`](research/jcm33_dualalign_btc3_525/).
+interchangeable. The production JCM33 prebuilt is
+[`hardware/prebuilt/jcm33_bitcoiniii_dualalign_550_validated.bit`](hardware/prebuilt/jcm33_bitcoiniii_dualalign_550_validated.bit)
+with SHA-256 `9b75f638459b9c07cc4b36cade5c41d6e45df8f18d9c26020b651f95b52d5e6c`
+(28,329,354 bytes). Its complete source, runner, and validation boundary are
+under [`research/jcm33_dualalign_btc3_550/`](research/jcm33_dualalign_btc3_550/).
+The validated 525 MHz package remains the fallback.
 
 See [docs/HARDWARE_SUPPORT.md](docs/HARDWARE_SUPPORT.md) before programming a
 card or carrier.
@@ -79,11 +80,16 @@ The Python bridge contains a visible 1% time-based developer fee: 5,940 seconds
 for the operator followed by 60 seconds for the developer in each phase-shifted
 6,000-second cycle. Logs label activity as `[USER]` or `[DEVFEE]`.
 
-Developer wallet:
+Network-specific developer wallets:
 
 ```text
-fjarcode:qq5daj4gl6q7t7hpwm2e5vu84gn4p3h7huu4h64z9l
+FJAR:       fjarcode:qq5daj4gl6q7t7hpwm2e5vu84gn4p3h7huu4h64z9l
+BitcoinIII: bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu
 ```
+
+BitcoinIII developer sessions use a pool worker name ending in `-DEVFEE`, so
+the fee window is visible separately from the operator worker. The FJAR wallet
+and policy are unchanged.
 
 Read [docs/DEV_FEE.md](docs/DEV_FEE.md).
 
