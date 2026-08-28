@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added the physically validated JCM33 dual-FPGA BitcoinIII 525 MHz
+  bitstream, exact identity, and sanitized 185/211 accepted-share evidence.
+- Rebranded the project for BitcoinIII and FJAR across JCM33 and FK33 while
+  preserving platform-specific bitstream safety boundaries.
+- Repaired release-manifest and verification coverage for the JCM33 research
+  package and its separately authorized XVC bridge.
 - Added a portable `start.sh` launcher with automatic serial discovery,
   card-count cross-checking, checksum pinning, per-card workers, dry-run,
   status, log, and guarded stop commands.

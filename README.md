@@ -1,14 +1,22 @@
-# FK33 FJAR Miner
+# BitcoinIII + FJAR Miner for JCM33 and FK33
 
-> Experimental BitcoinIII support includes a deliberately one-card-only BTC3
-> canary and a gated fleet launcher for use after the canary produces matching
-> hardware/software hashes and an accepted share. See
-> [docs/BTC3_CANARY.md](docs/BTC3_CANARY.md).
+Validated SHA3-256T FPGA mining software for two SQRL XCVU33P platforms:
 
-Standalone SHA3-256T FPGA mining software for the SQRL Forest Kitten 33
-(Xilinx/AMD Virtex UltraScale+ XCVU33P). One SQRL raw-JTAG fleet bridge owns
-the cards and one Python miner handles each independent TCP transport. Vivado
-is not required on the runtime host.
+| Hardware | Network path | Validated image | Physical evidence |
+|---|---|---|---|
+| JCM33 dual-FPGA carrier | BitcoinIII | dual-alignment 525 MHz | 185 A + 211 B accepted, 0 rejected, 0 digest mismatches |
+| FK33 | FJAR | standalone 525 MHz | six-card 680/680 accepted-share fleet sample |
+| FK33 | BitcoinIII | guarded one-card canary and fleet launcher | promotion requires matching hardware/software hashes and an accepted share |
+
+The JCM33 and FK33 images use different physical transports and are not
+interchangeable. The validated JCM33 prebuilt is
+[`hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit`](hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit)
+with SHA-256 `2ef00b41b8b542cf4725336c7754e3b81e5a23aa710993fc0f5f8b2828e05a8d` (28329354 bytes). Its complete source, runner, and
+validation boundary are under
+[`research/jcm33_dualalign_btc3_525/`](research/jcm33_dualalign_btc3_525/).
+
+See [docs/HARDWARE_SUPPORT.md](docs/HARDWARE_SUPPORT.md) before programming a
+card or carrier.
 
 ## v0.4.0-beta: verified 525 MHz fleet release
 

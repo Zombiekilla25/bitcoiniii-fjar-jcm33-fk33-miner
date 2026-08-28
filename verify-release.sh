@@ -25,7 +25,11 @@ from pathlib import Path
 
 paths = [
     Path("runtime/fjar_bridge.py"),
+    Path("runtime/btc3_bridge.py"),
     Path("third_party/sqrl/patch_rawjtag.py"),
+    Path("research/jcm33_dualalign_btc3_525/jcm33_btc3_dual_miner.py"),
+    Path("research/jcm33_dualalign_btc3_525/jcm33_ir_lane_calibration.py"),
+    Path("research/jcm33_dualalign_btc3_525/test_jcm33_dualalign_btc3_canary.py"),
     *sorted(Path("tests").glob("*.py")),
 ]
 for path in paths:
@@ -35,7 +39,7 @@ PY
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 printf '\nChecking shell syntax...\n'
-for script in ./*.sh runtime/*.sh hardware/source/*.sh hardware/source/*/*.sh; do
+for script in ./*.sh runtime/*.sh hardware/source/*.sh hardware/source/*/*.sh research/jcm33_dualalign_btc3_525/*.sh; do
     bash -n "$script"
 done
 
@@ -45,6 +49,7 @@ if command -v tclsh >/dev/null 2>&1; then
 set files [concat \
     [glob -nocomplain hardware/source/*.tcl] \
     [glob -nocomplain hardware/source/*/*.tcl] \
+    [glob -nocomplain research/jcm33_dualalign_btc3_525/*.tcl] \
 ]
 foreach file $files {
     set channel [open $file r]
@@ -105,6 +110,14 @@ printf '%s  %s\n' "$EXPECTED_BIT_550_SHA" \
 file hardware/prebuilt/fk33_fjar_bscan_550_experimental.bit |
     grep -Fq 'COMPRESS=FALSE'
 
+EXPECTED_JCM33_BIT_SHA='2ef00b41b8b542cf4725336c7754e3b81e5a23aa710993fc0f5f8b2828e05a8d'
+printf '%s  %s\n' "$EXPECTED_JCM33_BIT_SHA" \
+    hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit | sha256sum --check
+file hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit |
+    grep -Fq 'COMPRESS=FALSE'
+grep -Fq "$EXPECTED_JCM33_BIT_SHA" \
+    research/jcm33_dualalign_btc3_525/PREBUILT_SHA256.txt
+
 grep -Fq "$EXPECTED_BIT_525_SHA" start.sh
 grep -Fq "$EXPECTED_BIT_550_SHA" start.sh
 grep -Fq -- '--experimental-550' start.sh
@@ -137,14 +150,24 @@ file third_party/sqrl/sqrl_bridge_rawjtag_coe |
     grep -Eq 'ELF 64-bit.*x86-64'
 
 mapfile -t BRIDGES < <(
-    find . -path './.git' -prune -o -type f -name 'sqrl_bridge*' -print
+    find . -path './.git' -prune -o -type f -name 'sqrl_bridge*' -print | sort
 )
-if (("${#BRIDGES[@]}" != 1)) ||
-   [[ "${BRIDGES[0]}" != ./third_party/sqrl/sqrl_bridge_rawjtag_coe ]]; then
-    printf 'Unexpected SQRL bridge artifact set:\n%s\n' \
-        "$(printf '%s\n' "${BRIDGES[@]}")" >&2
+EXPECTED_BRIDGES=(
+    ./research/jcm33_dualalign_btc3_525/sqrl_bridge_rawjtag_coe_jcm33_xvc
+    ./third_party/sqrl/sqrl_bridge_rawjtag_coe
+)
+if ! diff -u \
+    <(printf '%s\n' "${EXPECTED_BRIDGES[@]}") \
+    <(printf '%s\n' "${BRIDGES[@]}"); then
+    printf 'Unexpected SQRL bridge artifact set.\n' >&2
     exit 1
 fi
+
+EXPECTED_JCM33_BRIDGE_SHA='fd1a550af5eb5dab475071a8f08f181c0b0d308233cbca805c52e3a96f342141'
+printf '%s  %s\n' "$EXPECTED_JCM33_BRIDGE_SHA" \
+    research/jcm33_dualalign_btc3_525/sqrl_bridge_rawjtag_coe_jcm33_xvc | sha256sum --check
+file research/jcm33_dualalign_btc3_525/sqrl_bridge_rawjtag_coe_jcm33_xvc |
+    grep -Eq 'ELF 64-bit.*x86-64'
 
 if find . -path './.git' -prune -o -type f \
     \( -name 'libncurses.so*' -o -name 'libtinfo.so*' \) -print |

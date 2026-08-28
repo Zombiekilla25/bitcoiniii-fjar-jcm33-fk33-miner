@@ -1,0 +1,10 @@
+schema=jcm33-bitcoiniii-dualalign-525-validated-v1
+source_commit=6f16220311d38c6df22695dfc270aecac8317511
+bitstream_path=hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit
+bitstream_size=28329354
+bitstream_sha256=2ef00b41b8b542cf4725336c7754e3b81e5a23aa710993fc0f5f8b2828e05a8d
+clock_mhz=525
+accepted_A=185
+accepted_B=211
+rejected=0
+hardware_software_mismatches=0

@@ -1,0 +1,4 @@
+accepted_A=185
+accepted_B=211
+rejected=0
+hardware_software_mismatches=0

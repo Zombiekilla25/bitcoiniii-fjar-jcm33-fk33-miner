@@ -38,10 +38,26 @@ This validates the 525 MHz dual-alignment build on the tested JCM33 carrier.
 It does not automatically qualify different hardware, cooling, voltage, or
 clock targets. See [VALIDATION.md](VALIDATION.md) for the promotion boundary.
 
+## Included validated prebuilt
+
+The exact image exercised by the recorded dual-FPGA canary is published at
+[`../../hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit`](../../hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit).
+
+```text
+SHA-256: 2ef00b41b8b542cf4725336c7754e3b81e5a23aa710993fc0f5f8b2828e05a8d
+Size: 28329354 bytes
+```
+
+From the repository root, authenticate it with:
+
+```bash
+sha256sum -c research/jcm33_dualalign_btc3_525/PREBUILT_SHA256.txt
+```
+
 ## Run
 
 ```bash
-git clone https://github.com/Zombiekilla25/fk33-fjar-miner.git
+git clone https://github.com/Zombiekilla25/bitcoiniii-fjar-jcm33-fk33-miner.git
 cd fk33-fjar-miner/research/jcm33_dualalign_btc3_525
 
 sha256sum -c SHA256SUMS

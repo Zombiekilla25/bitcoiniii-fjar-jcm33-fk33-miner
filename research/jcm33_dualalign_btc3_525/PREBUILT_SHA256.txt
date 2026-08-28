@@ -1,0 +1,1 @@
+2ef00b41b8b542cf4725336c7754e3b81e5a23aa710993fc0f5f8b2828e05a8d  hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit
