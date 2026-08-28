@@ -1,0 +1,8 @@
+JCM33 BitcoinIII dual-alignment 550 MHz validated prebuilt
+
+path=hardware/prebuilt/jcm33_bitcoiniii_dualalign_550_validated.bit
+size_bytes=28329354
+sha256=9b75f638459b9c07cc4b36cade5c41d6e45df8f18d9c26020b651f95b52d5e6c
+format=Xilinx BIT, uncompressed
+vivado=2026.1
+source_manifest_sha256=88b02892677aa9f3c97f5cc3c5c7c62cc0f06a78bcf7e16f7c5f2f71c7d05aab

@@ -1,0 +1,37 @@
+JCM33 dual-alignment 550 MHz hardware-qualified release
+
+Changes from the validated 525 MHz image
+----------------------------------------
+- Engine/MMCM output is exactly 550 MHz:
+  200 MHz input * 5.500 / 2.000 = 550 MHz, VCO 1100 MHz.
+- Implementation uses Vivado 2026.1 strategy
+  Performance_ExplorePostRoutePhysOpt through post-route physical optimization.
+- Setup and hold slack must both be nonnegative before the final uncompressed
+  bitstream is emitted or any FPGA is programmed.
+- The runner's offline-test path references the packaged 550 MHz test file.
+- The BitcoinIII host miner implements a transparent 1% time-based developer
+  rotation to the documented BitcoinIII address. Developer pool workers use
+  the visible -DEVFEE suffix. FJAR policy is unchanged.
+
+Unchanged transport and safety properties
+-----------------------------------------
+- Nine-bit USER2 capture and low/high frame-magic alignment lock.
+- Independent A-tailpad and B-tailpad job delivery.
+- SHA3-256T II=1 engines and Python digest verification.
+- Independent device tags and extranonce spaces.
+- PythonPool BitcoinIII endpoint stratum.pythonpool.dev:3357.
+- No voltage operation and no 350 MHz restore path.
+
+Physical qualification
+----------------------
+- 15-minute run: A=246 accepted, B=232 accepted.
+- 60-minute soak: A=388 accepted, B=418 accepted.
+- Combined: A=634, B=650, rejected=0, digest mismatches=0.
+- Final setup WNS: +0.128 ns.
+- Final hold WHS: +0.010 ns.
+- Maximum reported FPGA temperature: 28.641 C.
+- Whole-system wall power: 114 W including water pump and fans.
+
+The host-side developer-fee policy was added after hardware qualification. It
+does not change the qualified bitstream, FPGA work frames, digest validation,
+clock tree, implementation result, or timing evidence.

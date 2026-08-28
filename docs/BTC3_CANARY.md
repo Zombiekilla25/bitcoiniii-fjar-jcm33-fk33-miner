@@ -9,7 +9,9 @@ Safety gates:
 - Exactly one FK33 serial is accepted.
 - The 550 MHz image and arbitrary bitstream overrides are not accepted.
 - FPGA voltage is never changed.
-- There is no FJAR address or developer-wallet rotation in the BTC3 worker.
+- No FJAR address is used by the BTC3 worker.
+- BTC3 uses a visible 1% time-based developer rotation to the documented
+  BitcoinIII wallet; developer pool workers end in `-DEVFEE`.
 - A matching `hw=`/`sw=` digest and an `[ACCEPTED]` BTC3 share are required
   before any fleet deployment.
 

@@ -30,6 +30,9 @@ paths = [
     Path("research/jcm33_dualalign_btc3_525/jcm33_btc3_dual_miner.py"),
     Path("research/jcm33_dualalign_btc3_525/jcm33_ir_lane_calibration.py"),
     Path("research/jcm33_dualalign_btc3_525/test_jcm33_dualalign_btc3_canary.py"),
+    Path("research/jcm33_dualalign_btc3_550/jcm33_btc3_dual_miner.py"),
+    Path("research/jcm33_dualalign_btc3_550/jcm33_ir_lane_calibration.py"),
+    Path("research/jcm33_dualalign_btc3_550/test_jcm33_dualalign_btc3_550_canary.py"),
     *sorted(Path("tests").glob("*.py")),
 ]
 for path in paths:
@@ -39,7 +42,7 @@ PY
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 printf '\nChecking shell syntax...\n'
-for script in ./*.sh runtime/*.sh hardware/source/*.sh hardware/source/*/*.sh research/jcm33_dualalign_btc3_525/*.sh; do
+for script in ./*.sh runtime/*.sh hardware/source/*.sh hardware/source/*/*.sh research/jcm33_dualalign_btc3_525/*.sh research/jcm33_dualalign_btc3_550/*.sh; do
     bash -n "$script"
 done
 
@@ -50,6 +53,7 @@ set files [concat \
     [glob -nocomplain hardware/source/*.tcl] \
     [glob -nocomplain hardware/source/*/*.tcl] \
     [glob -nocomplain research/jcm33_dualalign_btc3_525/*.tcl] \
+    [glob -nocomplain research/jcm33_dualalign_btc3_550/*.tcl] \
 ]
 foreach file $files {
     set channel [open $file r]
@@ -96,6 +100,16 @@ if [[ "$EMBEDDED_ADDRESSES" != "$EXPECTED_DEV_WALLET" ]]; then
     exit 1
 fi
 
+EXPECTED_BTC3_DEV_WALLET='bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu'
+for MINER in \
+    runtime/btc3_bridge.py \
+    research/jcm33_dualalign_btc3_525/jcm33_btc3_dual_miner.py \
+    research/jcm33_dualalign_btc3_550/jcm33_btc3_dual_miner.py; do
+    grep -Fq "DEV_WALLET = \"$EXPECTED_BTC3_DEV_WALLET\"" "$MINER"
+    grep -Fq 'DEV_FEE_BPS = 100' "$MINER"
+    grep -Fq 'DEV_WORKER_SUFFIX = "-DEVFEE"' "$MINER"
+done
+
 EXPECTED_BIT_500_SHA='efe740723b4ef4d93b29339cdeea32416495aabea8f78cb15f3456c44a354ecb'
 printf '%s  %s\n' "$EXPECTED_BIT_500_SHA" \
     hardware/prebuilt/fk33_fjar_bscan_500.bit | sha256sum --check
@@ -117,6 +131,14 @@ file hardware/prebuilt/jcm33_bitcoiniii_dualalign_525_validated.bit |
     grep -Fq 'COMPRESS=FALSE'
 grep -Fq "$EXPECTED_JCM33_BIT_SHA" \
     research/jcm33_dualalign_btc3_525/PREBUILT_SHA256.txt
+
+EXPECTED_JCM33_BIT_550_SHA='9b75f638459b9c07cc4b36cade5c41d6e45df8f18d9c26020b651f95b52d5e6c'
+printf '%s  %s\n' "$EXPECTED_JCM33_BIT_550_SHA" \
+    hardware/prebuilt/jcm33_bitcoiniii_dualalign_550_validated.bit | sha256sum --check
+file hardware/prebuilt/jcm33_bitcoiniii_dualalign_550_validated.bit |
+    grep -Fq 'COMPRESS=FALSE'
+grep -Fq "$EXPECTED_JCM33_BIT_550_SHA" \
+    research/jcm33_dualalign_btc3_550/PREBUILT_SHA256.txt
 
 grep -Fq "$EXPECTED_BIT_525_SHA" start.sh
 grep -Fq "$EXPECTED_BIT_550_SHA" start.sh
@@ -154,6 +176,7 @@ mapfile -t BRIDGES < <(
 )
 EXPECTED_BRIDGES=(
     ./research/jcm33_dualalign_btc3_525/sqrl_bridge_rawjtag_coe_jcm33_xvc
+    ./research/jcm33_dualalign_btc3_550/sqrl_bridge_rawjtag_coe_jcm33_xvc
     ./third_party/sqrl/sqrl_bridge_rawjtag_coe
 )
 if ! diff -u \
@@ -167,6 +190,10 @@ EXPECTED_JCM33_BRIDGE_SHA='fd1a550af5eb5dab475071a8f08f181c0b0d308233cbca805c52e
 printf '%s  %s\n' "$EXPECTED_JCM33_BRIDGE_SHA" \
     research/jcm33_dualalign_btc3_525/sqrl_bridge_rawjtag_coe_jcm33_xvc | sha256sum --check
 file research/jcm33_dualalign_btc3_525/sqrl_bridge_rawjtag_coe_jcm33_xvc |
+    grep -Eq 'ELF 64-bit.*x86-64'
+printf '%s  %s\n' "$EXPECTED_JCM33_BRIDGE_SHA" \
+    research/jcm33_dualalign_btc3_550/sqrl_bridge_rawjtag_coe_jcm33_xvc | sha256sum --check
+file research/jcm33_dualalign_btc3_550/sqrl_bridge_rawjtag_coe_jcm33_xvc |
     grep -Eq 'ELF 64-bit.*x86-64'
 
 if find . -path './.git' -prune -o -type f \
@@ -194,7 +221,7 @@ grep -Fq '4381283543d0c39650463f7ad8a91874eaeb0c5b2884be263fc4f9ab7bd19ec5' \
 
 printf '\nChecking private identifiers...\n'
 if grep -RInE \
-    'rmann|Host[[:space:]]*:[[:space:]]*RGB|153300000[0-9]{3}|153300001064|bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu' \
+    'rmann|Host[[:space:]]*:[[:space:]]*RGB|153300000[0-9]{3}|153300001064' \
     . --binary-files=without-match --exclude-dir=.git --exclude=.git \
     --exclude=SHA256SUMS --exclude=verify-release.sh; then
     printf 'Private identifier audit failed.\n' >&2

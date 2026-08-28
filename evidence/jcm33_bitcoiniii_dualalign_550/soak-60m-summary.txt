@@ -1,0 +1,17 @@
+JCM33 BitcoinIII dual-alignment 550 MHz 60-minute soak
+
+accepted_A=388
+accepted_B=418
+rejected=0
+hardware_software_mismatches=0
+
+Device 0 temperature: 28.641 C
+Device 1 temperature: 27.149 C
+VCCINT: 0.847 V
+VCCAUX: 1.822 V
+VCCBRAM: 0.850-0.853 V
+voltage_command=none
+
+Whole-system wall power: 114 W including water pump and fans
+Nominal combined engine rate: 1.10 GH/s
+Complete-system efficiency: 9.65 MH/s/W (103.6 W/GH)
