@@ -9,3 +9,4 @@ hardware/source/*.dcp
 hardware/source/*.bit
 hardware/source/*.rpt
 hardware/source/*.pb
+/config-jcm33-btc3.env

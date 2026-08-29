@@ -35,6 +35,12 @@ The qualification package carried the exact hardware-qualified 587.5 MHz
 rollback image and did not need to invoke it. The published validated 550 MHz
 and 525 MHz images remain additional fallbacks.
 
+The release-candidate production supervisor is `start-jcm33-btc3.sh`. It
+references the exact qualified 650 MHz artifacts in place and automatically
+restores the checksum-pinned qualified 587.5 MHz image after a controlled stop
+or detected runtime failure. The supervisor does not expand the physical
+qualification boundary. See [JCM33_PRODUCTION.md](JCM33_PRODUCTION.md).
+
 ## FK33 boundary
 
 The FK33 FJAR path retains the verified 525 MHz fleet release and its 500 MHz
