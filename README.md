@@ -4,17 +4,17 @@ Validated SHA3-256T FPGA mining software for two SQRL XCVU33P platforms:
 
 | Hardware | Network path | Validated image | Physical evidence |
 |---|---|---|---|
-| JCM33 dual-FPGA carrier | BitcoinIII | dual-alignment 550 MHz | 634 A + 650 B accepted, 0 rejected, 0 digest mismatches |
+| JCM33 dual-FPGA carrier | BitcoinIII | dual-alignment 650 MHz | A=1,380 + B=1,362 accepted across 5m/60m runs; 0 rejected; 0 digest mismatches |
 | FK33 | FJAR | standalone 525 MHz | six-card 680/680 accepted-share fleet sample |
 | FK33 | BitcoinIII | guarded one-card canary and fleet launcher | promotion requires matching hardware/software hashes and an accepted share |
 
 The JCM33 and FK33 images use different physical transports and are not
 interchangeable. The production JCM33 prebuilt is
-[`hardware/prebuilt/jcm33_bitcoiniii_dualalign_550_validated.bit`](hardware/prebuilt/jcm33_bitcoiniii_dualalign_550_validated.bit)
-with SHA-256 `9b75f638459b9c07cc4b36cade5c41d6e45df8f18d9c26020b651f95b52d5e6c`
-(28,329,354 bytes). Its complete source, runner, and validation boundary are
-under [`research/jcm33_dualalign_btc3_550/`](research/jcm33_dualalign_btc3_550/).
-The validated 525 MHz package remains the fallback.
+[`hardware/prebuilt/jcm33_bitcoiniii_dualalign_650_validated.bit`](hardware/prebuilt/jcm33_bitcoiniii_dualalign_650_validated.bit)
+with SHA-256 `0eacb71eb4cb5f6a43f761d1af64dfe25c8fa22177974082742dc12d6f6cdcf1` (28,329,354 bytes). Its complete source, exhaustive
+route evidence, safe 587.5 MHz rollback, runner, and validation boundary are
+under [`research/jcm33_dualalign_btc3_650/`](research/jcm33_dualalign_btc3_650/).
+The validated 550 MHz and 525 MHz images remain published fallbacks.
 
 See [docs/HARDWARE_SUPPORT.md](docs/HARDWARE_SUPPORT.md) before programming a
 card or carrier.

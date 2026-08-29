@@ -33,6 +33,9 @@ paths = [
     Path("research/jcm33_dualalign_btc3_550/jcm33_btc3_dual_miner.py"),
     Path("research/jcm33_dualalign_btc3_550/jcm33_ir_lane_calibration.py"),
     Path("research/jcm33_dualalign_btc3_550/test_jcm33_dualalign_btc3_550_canary.py"),
+    Path("research/jcm33_dualalign_btc3_650/jcm33_btc3_dual_miner.py"),
+    Path("research/jcm33_dualalign_btc3_650/jcm33_ir_lane_calibration.py"),
+    Path("research/jcm33_dualalign_btc3_650/test_jcm33_dualalign_btc3_650_canary.py"),
     *sorted(Path("tests").glob("*.py")),
 ]
 for path in paths:
@@ -42,7 +45,10 @@ PY
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 printf '\nChecking shell syntax...\n'
-for script in ./*.sh runtime/*.sh hardware/source/*.sh hardware/source/*/*.sh research/jcm33_dualalign_btc3_525/*.sh research/jcm33_dualalign_btc3_550/*.sh; do
+for script in ./*.sh runtime/*.sh hardware/source/*.sh hardware/source/*/*.sh \
+    research/jcm33_dualalign_btc3_525/*.sh \
+    research/jcm33_dualalign_btc3_550/*.sh \
+    research/jcm33_dualalign_btc3_650/*.sh; do
     bash -n "$script"
 done
 
@@ -54,6 +60,7 @@ set files [concat \
     [glob -nocomplain hardware/source/*/*.tcl] \
     [glob -nocomplain research/jcm33_dualalign_btc3_525/*.tcl] \
     [glob -nocomplain research/jcm33_dualalign_btc3_550/*.tcl] \
+    [glob -nocomplain research/jcm33_dualalign_btc3_650/*.tcl] \
 ]
 foreach file $files {
     set channel [open $file r]
@@ -104,7 +111,8 @@ EXPECTED_BTC3_DEV_WALLET='bc1qwcusej0umav5dw9k9f6cuy6mhzsdj9su4rayqu'
 for MINER in \
     runtime/btc3_bridge.py \
     research/jcm33_dualalign_btc3_525/jcm33_btc3_dual_miner.py \
-    research/jcm33_dualalign_btc3_550/jcm33_btc3_dual_miner.py; do
+    research/jcm33_dualalign_btc3_550/jcm33_btc3_dual_miner.py \
+    research/jcm33_dualalign_btc3_650/jcm33_btc3_dual_miner.py; do
     grep -Fq "DEV_WALLET = \"$EXPECTED_BTC3_DEV_WALLET\"" "$MINER"
     grep -Fq 'DEV_FEE_BPS = 100' "$MINER"
     grep -Fq 'DEV_WORKER_SUFFIX = "-DEVFEE"' "$MINER"
@@ -139,6 +147,23 @@ file hardware/prebuilt/jcm33_bitcoiniii_dualalign_550_validated.bit |
     grep -Fq 'COMPRESS=FALSE'
 grep -Fq "$EXPECTED_JCM33_BIT_550_SHA" \
     research/jcm33_dualalign_btc3_550/PREBUILT_SHA256.txt
+
+EXPECTED_JCM33_BIT_650_SHA='0eacb71eb4cb5f6a43f761d1af64dfe25c8fa22177974082742dc12d6f6cdcf1'
+printf '%s  %s\n' "$EXPECTED_JCM33_BIT_650_SHA" \
+    hardware/prebuilt/jcm33_bitcoiniii_dualalign_650_validated.bit | sha256sum --check
+file hardware/prebuilt/jcm33_bitcoiniii_dualalign_650_validated.bit |
+    grep -Fq 'COMPRESS=FALSE'
+grep -Fq "$EXPECTED_JCM33_BIT_650_SHA" \
+    research/jcm33_dualalign_btc3_650/PREBUILT_SHA256.txt
+
+EXPECTED_JCM33_ROLLBACK_587P5_SHA='2abff6fc716bdea86d7c88865e07dcd380a89564f9267654910b5931a3f2f85b'
+printf '%s  %s\n' "$EXPECTED_JCM33_ROLLBACK_587P5_SHA" \
+    research/jcm33_dualalign_btc3_650/qualified_587p5/jcm33_dualalign_bscan_587p5.bit | sha256sum --check
+grep -Fq 'accepted_A=1181' evidence/jcm33_bitcoiniii_dualalign_650/soak-60m-summary.txt
+grep -Fq 'accepted_B=1187' evidence/jcm33_bitcoiniii_dualalign_650/soak-60m-summary.txt
+grep -Fq 'hardware_software_mismatches=0' evidence/jcm33_bitcoiniii_dualalign_650/soak-60m-summary.txt
+grep -Fq 'FINAL SETUP WNS: 0.010 ns' evidence/jcm33_bitcoiniii_dualalign_650/timing-summary.txt
+grep -Fq 'FINAL HOLD  WHS: 0.010 ns' evidence/jcm33_bitcoiniii_dualalign_650/timing-summary.txt
 
 grep -Fq "$EXPECTED_BIT_525_SHA" start.sh
 grep -Fq "$EXPECTED_BIT_550_SHA" start.sh
@@ -177,6 +202,7 @@ mapfile -t BRIDGES < <(
 EXPECTED_BRIDGES=(
     ./research/jcm33_dualalign_btc3_525/sqrl_bridge_rawjtag_coe_jcm33_xvc
     ./research/jcm33_dualalign_btc3_550/sqrl_bridge_rawjtag_coe_jcm33_xvc
+    ./research/jcm33_dualalign_btc3_650/sqrl_bridge_rawjtag_coe_jcm33_xvc
     ./third_party/sqrl/sqrl_bridge_rawjtag_coe
 )
 if ! diff -u \
@@ -194,6 +220,10 @@ file research/jcm33_dualalign_btc3_525/sqrl_bridge_rawjtag_coe_jcm33_xvc |
 printf '%s  %s\n' "$EXPECTED_JCM33_BRIDGE_SHA" \
     research/jcm33_dualalign_btc3_550/sqrl_bridge_rawjtag_coe_jcm33_xvc | sha256sum --check
 file research/jcm33_dualalign_btc3_550/sqrl_bridge_rawjtag_coe_jcm33_xvc |
+    grep -Eq 'ELF 64-bit.*x86-64'
+printf '%s  %s\n' "$EXPECTED_JCM33_BRIDGE_SHA" \
+    research/jcm33_dualalign_btc3_650/sqrl_bridge_rawjtag_coe_jcm33_xvc | sha256sum --check
+file research/jcm33_dualalign_btc3_650/sqrl_bridge_rawjtag_coe_jcm33_xvc |
     grep -Eq 'ELF 64-bit.*x86-64'
 
 if find . -path './.git' -prune -o -type f \

@@ -1,0 +1,34 @@
+JCM33 dual-alignment 650 MHz hardware-qualified release
+
+Changes from the validated 550 MHz image
+----------------------------------------
+- Engine/MMCM output is exactly 650 MHz:
+  200 MHz input * 6.500 / 2.000 = 650 MHz, VCO 1300 MHz.
+- Vivado 2026.1 runs all six supported performance strategies and selects the
+  route maximizing the smaller of setup and hold slack.
+- Setup and hold slack must both be nonnegative before a valid uncompressed
+  bitstream is qualified.
+- The canary carries the exact validated 587.5 MHz rollback and restores it
+  after pass, failure, or interruption.
+
+Unchanged transport and safety properties
+-----------------------------------------
+- Nine-bit USER2 capture and low/high frame-magic alignment lock.
+- Independent A-tailpad and B-tailpad job delivery.
+- SHA3-256T II=1 engines and Python digest verification.
+- Independent device tags and extranonce spaces.
+- PythonPool BitcoinIII endpoint stratum.pythonpool.dev:3357.
+- No voltage operation and no 350 MHz restore path.
+
+Physical qualification
+----------------------
+- 5-minute canary: A=199 accepted, B=175 accepted.
+- 60-minute soak: A=1,181 accepted, B=1,187 accepted.
+- Combined: A=1,380, B=1,362, rejected=0, digest mismatches=0.
+- Final setup WNS: +0.010 ns.
+- Final hold WHS: +0.010 ns.
+- Maximum reported FPGA temperature: 30.133 C.
+- No 650 MHz wall-power observation or efficiency claim.
+
+The published miner retains the visible BitcoinIII 1% developer-fee policy.
+That host-side change does not alter the qualified hardware image or evidence.

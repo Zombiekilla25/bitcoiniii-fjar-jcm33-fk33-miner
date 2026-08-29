@@ -1,0 +1,7 @@
+Sanitized identities of the locally retained qualification archives
+
+5-minute-canary_sha256=9ec6472b0856342cc3b76605216670dfe5156c882ff6ab7cd9227f2e428c0e17
+60-minute-soak_sha256=573e9091a8cc4a103e35d7291985719dec37d1d351b373925f70dbd37a7c8a48
+
+The raw archives are not published because they contain host-specific runtime
+paths and operational logs. Their sanitized summaries are published here.

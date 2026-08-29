@@ -1,0 +1,7 @@
+candidate	strategy	status	setup_wns_ns	hold_whs_ns
+route_00_Performance_ExplorePostRoutePhysOpt	Performance_ExplorePostRoutePhysOpt	qualified	0.026	0.006
+route_01_Performance_NetDelay_high	Performance_NetDelay_high	timing_failed	-0.026	0.009
+route_02_Performance_NetDelay_low	Performance_NetDelay_low	qualified	0.010	0.010
+route_03_Performance_ExtraTimingOpt	Performance_ExtraTimingOpt	qualified	0.031	0.009
+route_04_Performance_Retiming	Performance_Retiming	qualified	0.045	0.001
+route_05_Performance_Explore	Performance_Explore	qualified	0.026	0.006

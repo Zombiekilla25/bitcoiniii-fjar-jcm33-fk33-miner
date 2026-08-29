@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Promoted the timing-clean JCM33 dual-FPGA BitcoinIII 650 MHz image after a
+  5-minute canary and 60-minute soak totaling A=1,380 and B=1,362 accepted
+  shares with zero rejects and zero hardware/software digest mismatches.
+- Added the exact uncompressed 650 MHz prebuilt, six-strategy route summary,
+  positive `+0.010 ns` setup/hold timing evidence, complete source, XVC runner,
+  and the qualified 587.5 MHz rollback image.
+- Recorded a maximum observed FPGA temperature of `30.133 C`, stock VCCINT of
+  `0.847–0.850 V`, and no voltage command. No 650 MHz power claim is made.
+
 - Added the physically validated JCM33 dual-FPGA BitcoinIII 525 MHz
   bitstream, exact identity, and sanitized 185/211 accepted-share evidence.
 - Rebranded the project for BitcoinIII and FJAR across JCM33 and FK33 while

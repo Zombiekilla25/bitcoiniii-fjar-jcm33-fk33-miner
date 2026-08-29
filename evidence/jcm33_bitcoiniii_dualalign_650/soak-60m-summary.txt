@@ -1,0 +1,16 @@
+JCM33 BitcoinIII dual-alignment 650 MHz 60-minute soak
+
+accepted_A=1181
+accepted_B=1187
+rejected=0
+hardware_software_mismatches=0
+rollback_587p5=not-needed
+
+Device 0 temperature: 30.133 C
+Device 1 temperature: 29.138 C
+VCCINT: 0.847-0.850 V
+VCCAUX: 1.819-1.822 V
+VCCBRAM: 0.853 V
+voltage_command=none
+
+No contemporaneous 650 MHz wall-power measurement was recorded.
