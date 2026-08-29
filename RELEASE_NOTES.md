@@ -1,3 +1,19 @@
+# JCM33 650 MHz hardware-qualified update — 2026-08-29
+
+The JCM33 production image is now the dual-alignment 650 MHz BitcoinIII build.
+The exact `0eacb71eb4cb5f6a43f761d1af64dfe25c8fa22177974082742dc12d6f6cdcf1` image passed a 5-minute canary and a 60-minute soak with
+2,742 accepted shares, zero rejects, and zero hardware/software digest
+mismatches. Final routed setup WNS and hold WHS are both `+0.010 ns`; maximum
+reported temperature was `30.133 C`; no voltage command was used.
+
+This update does not promote the JCM33 image to FK33. The platforms retain
+different physical JTAG transports. The validated 550 MHz and 525 MHz JCM33
+images remain fallbacks, and the qualification runner carries the exact 587.5
+MHz rollback image. No contemporaneous 650 MHz wall-power measurement was
+recorded, so no new efficiency claim is made.
+
+---
+
 # v0.4.0-beta — 525 MHz FK33 fleet release
 
 This release advances the standalone six-card FK33 fleet from 500 MHz to a

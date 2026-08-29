@@ -1,0 +1,54 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2026.1 (lin64) Build 6511674 Tue Jun 16 11:01:26 MDT 2026
+| Date         : Fri Aug 28 21:45:15 2026
+| Host : redacted-build-host
+| Command : redacted-build-command
+| Design       : miner_top_ii1_bscan_650
+| Device       : xcvu33p-fsvh2104-2-e
+| Speed File   : -2
+| Design State : Routed
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++-----------------------------+--------------------------------------+------------+------------+---------+------+--------+--------+--------+------+------------+
+|           Instance          |                Module                | Total LUTs | Logic LUTs | LUTRAMs | SRLs |   FFs  | RAMB36 | RAMB18 | URAM | DSP Blocks |
++-----------------------------+--------------------------------------+------------+------------+---------+------+--------+--------+--------+------+------------+
+| miner_top_ii1_bscan_650     |                                (top) |     244313 |     244089 |       0 |  224 | 359246 |      0 |      0 |    0 |          0 |
+|   (miner_top_ii1_bscan_650) |                                (top) |          2 |          2 |       0 |    0 |   1480 |      0 |      0 |    0 |          0 |
+|   u_bscan_transport         |                 fk33_bscan_transport |       2062 |       2062 |       0 |    0 |   4761 |      0 |      0 |    0 |          0 |
+|     (u_bscan_transport)     |                 fk33_bscan_transport |       2062 |       2062 |       0 |    0 |   3011 |      0 |      0 |    0 |          0 |
+|     u_job_mailbox_cdc       |              xpm_cdc_array_single__1 |          0 |          0 |       0 |    0 |   1744 |      0 |      0 |    0 |          0 |
+|   u_candidate_bus_cdc       | xpm_cdc_array_single__parameterized0 |          0 |          0 |       0 |    0 |    592 |      0 |      0 |    0 |          0 |
+|   u_engine                  |               sha3t_ii1_miner_engine |     242249 |     242025 |       0 |  224 | 351143 |      0 |      0 |    0 |          0 |
+|     (u_engine)              |               sha3t_ii1_miner_engine |         11 |         11 |       0 |    0 |    963 |      0 |      0 |    0 |          0 |
+|     u_pipeline              |                   sha3t_ii1_pipeline |     242238 |     242014 |       0 |  224 | 350180 |      0 |      0 |    0 |          0 |
+|       u_pass1               |            keccak_f1600_ii1_pipeline |      81283 |      81219 |       0 |   64 | 117451 |      0 |      0 |    0 |          0 |
+|         (u_pass1)           |            keccak_f1600_ii1_pipeline |      78091 |      78027 |       0 |   64 | 117451 |      0 |      0 |    0 |          0 |
+|         ROUND[2].u_chi      |                         keccak_chi_8 |       1595 |       1595 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|         ROUND[3].u_chi      |                         keccak_chi_9 |       1597 |       1597 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|       u_pass2               |          keccak_f1600_ii1_pipeline_0 |      80456 |      80392 |       0 |   64 | 116364 |      0 |      0 |    0 |          0 |
+|         (u_pass2)           |          keccak_f1600_ii1_pipeline_0 |      77264 |      77200 |       0 |   64 | 116364 |      0 |      0 |    0 |          0 |
+|         ROUND[2].u_chi      |                         keccak_chi_6 |       1595 |       1595 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|         ROUND[3].u_chi      |                         keccak_chi_7 |       1597 |       1597 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|       u_pass3               |          keccak_f1600_ii1_pipeline_1 |      80499 |      80403 |       0 |   96 | 116365 |      0 |      0 |    0 |          0 |
+|         (u_pass3)           |          keccak_f1600_ii1_pipeline_1 |      73471 |      73375 |       0 |   96 | 116365 |      0 |      0 |    0 |          0 |
+|         ROUND[0].u_chi      |                           keccak_chi |       1599 |       1599 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|         ROUND[1].u_chi      |                         keccak_chi_2 |       1597 |       1597 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|         ROUND[1].u_parity   |                  keccak_theta_parity |        320 |        320 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|         ROUND[2].u_chi      |                         keccak_chi_3 |       1595 |       1595 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|         ROUND[2].u_parity   |                keccak_theta_parity_4 |        320 |        320 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|         ROUND[3].u_chi      |                         keccak_chi_5 |       1597 |       1597 |       0 |    0 |      0 |      0 |      0 |    0 |          0 |
+|   u_job_bus_cdc             |                 xpm_cdc_array_single |          0 |          0 |       0 |    0 |   1264 |      0 |      0 |    0 |          0 |
++-----------------------------+--------------------------------------+------------+------------+---------+------+--------+--------+--------+------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+
