@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Added a release-candidate JCM33 650 MHz production supervisor with
+  `doctor`, background/foreground start, status, logs, and safe stop commands.
+- Pinned the already-qualified 650 MHz bitstream, dual miner, XVC bridge, and
+  587.5 MHz rollback identities without changing RTL, clocking, or voltage.
+- Added PID-specific bridge/miner monitoring, digest-mismatch fail-closed
+  handling, process-conflict isolation, and automatic two-device rollback on
+  controlled stop or detected runtime failure.
+- Added JCM33 production configuration and operating documentation. Promotion
+  to systemd remains gated on a fresh-clone canary, rollback drill, six-hour
+  burn-in, and 24-hour unattended soak.
+
 - Promoted the timing-clean JCM33 dual-FPGA BitcoinIII 650 MHz image after a
   5-minute canary and 60-minute soak totaling A=1,380 and B=1,362 accepted
   shares with zero rejects and zero hardware/software digest mismatches.

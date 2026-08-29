@@ -19,6 +19,29 @@ The validated 550 MHz and 525 MHz images remain published fallbacks.
 See [docs/HARDWARE_SUPPORT.md](docs/HARDWARE_SUPPORT.md) before programming a
 card or carrier.
 
+## JCM33 650 MHz launcher release candidate
+
+The top-level `start-jcm33-btc3.sh` supervisor productionizes the published
+JCM33 650 MHz package without changing its audited bitstream, miner, bridge,
+clock, or voltage. It requires both FPGAs, monitors the exact child processes,
+fails closed on a hardware/software digest mismatch, preserves unrelated FK33
+bridges, and restores the checksum-pinned qualified 587.5 MHz image on a
+controlled stop or detected runtime failure.
+
+```bash
+cp config-jcm33-btc3.env.example config-jcm33-btc3.env
+chmod 600 config-jcm33-btc3.env
+# Edit BTC3_WALLET, then:
+./start-jcm33-btc3.sh doctor --dry-run
+./start-jcm33-btc3.sh doctor
+./start-jcm33-btc3.sh start
+```
+
+Use `status`, `logs`, and `stop` for lifecycle control. The launcher remains a
+release candidate until it passes the documented fresh-clone canary, rollback
+drill, six-hour burn-in, and 24-hour soak. See
+[docs/JCM33_PRODUCTION.md](docs/JCM33_PRODUCTION.md).
+
 ## v0.4.0-beta: verified 525 MHz fleet release
 
 The hardware-tested `v0.4.0-beta` release raises the standalone FK33 fleet

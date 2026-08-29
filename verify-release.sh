@@ -165,6 +165,30 @@ grep -Fq 'hardware_software_mismatches=0' evidence/jcm33_bitcoiniii_dualalign_65
 grep -Fq 'FINAL SETUP WNS: 0.010 ns' evidence/jcm33_bitcoiniii_dualalign_650/timing-summary.txt
 grep -Fq 'FINAL HOLD  WHS: 0.010 ns' evidence/jcm33_bitcoiniii_dualalign_650/timing-summary.txt
 
+EXPECTED_JCM33_MINER_650_SHA='1d64c8e7d2650e3733a26985f271779dbf5b36fea46e5c6ea7e6c605681c3593'
+EXPECTED_JCM33_BRIDGE_SHA='fd1a550af5eb5dab475071a8f08f181c0b0d308233cbca805c52e3a96f342141'
+printf '%s  %s\n' "$EXPECTED_JCM33_MINER_650_SHA" \
+    research/jcm33_dualalign_btc3_650/jcm33_btc3_dual_miner.py | sha256sum --check
+test -x start-jcm33-btc3.sh
+for EXPECTED_SHA in \
+    "$EXPECTED_JCM33_BIT_650_SHA" \
+    "$EXPECTED_JCM33_ROLLBACK_587P5_SHA" \
+    "$EXPECTED_JCM33_BRIDGE_SHA" \
+    "$EXPECTED_JCM33_MINER_650_SHA"; do
+    grep -Fq "$EXPECTED_SHA" start-jcm33-btc3.sh
+done
+grep -Fq 'restore_qualified_587p5' start-jcm33-btc3.sh
+grep -Fq 'unrelated USB/FK bridge processes are preserved' start-jcm33-btc3.sh
+grep -Fq 'flock -n "$STATE_DIR/runtime.lock"' start-jcm33-btc3.sh
+if grep -Eq 'pkill|killall' start-jcm33-btc3.sh; then
+    printf 'JCM33 launcher contains broad process termination.\n' >&2
+    exit 1
+fi
+if grep -E '\$BRIDGE.*[[:space:]]-[vV]([[:space:]]|$)' start-jcm33-btc3.sh; then
+    printf 'JCM33 launcher contains a voltage option.\n' >&2
+    exit 1
+fi
+
 grep -Fq "$EXPECTED_BIT_525_SHA" start.sh
 grep -Fq "$EXPECTED_BIT_550_SHA" start.sh
 grep -Fq -- '--experimental-550' start.sh
