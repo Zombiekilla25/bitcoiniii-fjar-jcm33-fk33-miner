@@ -1,0 +1,6 @@
+archive=private qualification archive retained by the hardware owner
+sha256=c78748cf24e9b3ce91856a13c2fb06ba4e31a4315028a877f65ae1dde1614c46
+
+The public repository contains sanitized summaries rather than the raw archive
+because the raw logs include a private hardware serial, wallet, hostname, and
+local filesystem paths.

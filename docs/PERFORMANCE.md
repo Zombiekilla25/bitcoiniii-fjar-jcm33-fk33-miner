@@ -29,3 +29,11 @@ no measured 525 MHz power or efficiency claim.
 
 All six services remained active. No rejected shares, duplicate shares,
 digest faults, comparator faults, runtime faults, or voltage commands occurred.
+
+## Native 650 MHz qualification boundary
+
+The v0.5.0-beta native 650 MHz image represents a 23.81% clock increase over
+525 MHz, but the completed test was a correctness and stability soak on one
+card, not a fleet hashrate benchmark. It produced 675/675 accepted submissions
+with zero digest mismatches over 60 minutes. No measured 650 MHz fleet
+hashrate, wall power, or efficiency result is claimed.

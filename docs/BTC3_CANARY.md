@@ -4,6 +4,10 @@ BitcoinIII and FJAR use the same SHA3-256T hash construction, but the BTC3
 pool path is not yet fleet-qualified.  This canary reuses the checksum-pinned
 525 MHz FK33 SHA3-256T image and changes only the Stratum worker configuration.
 
+The separately published native 650 MHz image completed a 60-minute one-card
+BitcoinIII soak. Its fleet selection remains explicit because other cards have
+not yet been qualified at that clock. See [FK33_NATIVE650.md](FK33_NATIVE650.md).
+
 Safety gates:
 
 - Exactly one FK33 serial is accepted.
@@ -102,5 +106,7 @@ Then start the fleet with an explicit acknowledgement of the passed canary:
   --canary-passed
 ```
 
-The fleet launcher remains pinned to the 525 MHz SHA3-256T image and never
-changes FPGA voltage.
+The command above retains the 525 MHz default. To select the published native
+650 MHz image, add `--qualified-650` to both the doctor and start commands. The
+launcher accepts only the pinned 525 or 650 MHz images and never changes FPGA
+voltage.

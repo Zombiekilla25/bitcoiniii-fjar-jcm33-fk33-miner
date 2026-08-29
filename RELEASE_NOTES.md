@@ -1,3 +1,31 @@
+# v0.5.0-beta — native FK33 650 MHz one-card qualification
+
+This release publishes the exact native eight-bit FK33 650 MHz SHA3-256T image
+with SHA-256
+`bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39`.
+It is distinct from the JCM33 dual-device 650 MHz image.
+
+The selected route is timing-clean with setup WNS `+0.002 ns` and hold WHS
+`+0.007 ns`. A 60-minute BitcoinIII soak on one physical FK33 produced 740
+hardware share frames, suppressed 65 byte-identical duplicate candidates, and
+submitted 675 shares. All 675 were accepted. There were zero rejected shares,
+hardware/software digest mismatches, or protocol errors.
+
+The card began at `27.646 C` and reported `41.076 C` during the post-soak
+rollback load. Observed VCCINT was `0.809 V` initially and `0.803 V` after the
+soak. No voltage command was used. The exact qualified 525 MHz image was
+restored successfully.
+
+The 650 MHz image is one-card qualified, not yet multi-card fleet-qualified.
+For that reason 525 MHz remains the default. Portable launchers require
+`--qualified-650`; installed systemd fleets require the explicit
+`FJAR_FLEET_BITSTREAM=650` setting. Both paths authenticate the image before
+programming. Set the systemd selection back to `525` for rollback.
+
+No 650 MHz fleet hashrate or wall-power measurement is claimed.
+
+---
+
 # JCM33 650 MHz hardware-qualified update — 2026-08-29
 
 The JCM33 production image is now the dual-alignment 650 MHz BitcoinIII build.

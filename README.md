@@ -5,8 +5,8 @@ Validated SHA3-256T FPGA mining software for two SQRL XCVU33P platforms:
 | Hardware | Network path | Validated image | Physical evidence |
 |---|---|---|---|
 | JCM33 dual-FPGA carrier | BitcoinIII | dual-alignment 650 MHz | A=1,380 + B=1,362 accepted across 5m/60m runs; 0 rejected; 0 digest mismatches |
-| FK33 | FJAR | standalone 525 MHz | six-card 680/680 accepted-share fleet sample |
-| FK33 | BitcoinIII | guarded one-card canary and fleet launcher | promotion requires matching hardware/software hashes and an accepted share |
+| FK33 | FJAR | standalone 525 MHz default | six-card 680/680 accepted-share fleet sample |
+| FK33 | BitcoinIII | native 650 MHz opt-in | one-card 60m soak; 675/675 accepted; 0 mismatches |
 
 The JCM33 and FK33 images use different physical transports and are not
 interchangeable. The production JCM33 prebuilt is
@@ -18,6 +18,26 @@ The validated 550 MHz and 525 MHz images remain published fallbacks.
 
 See [docs/HARDWARE_SUPPORT.md](docs/HARDWARE_SUPPORT.md) before programming a
 card or carrier.
+
+## v0.5.0-beta: native FK33 650 MHz qualification
+
+The exact uncompressed native FK33 image
+[`hardware/prebuilt/fk33_native_bscan_650_validated.bit`](hardware/prebuilt/fk33_native_bscan_650_validated.bit)
+passed a 60-minute BitcoinIII hardware soak on one physical FK33. The test
+produced 740 hardware share frames: 675 were independently verified, submitted,
+and accepted, while 65 byte-identical duplicates were suppressed before pool
+submission. There were zero rejected shares, hardware/software mismatches, or
+protocol errors.
+
+The selected route has setup WNS `+0.002 ns` and hold WHS `+0.007 ns`. The
+post-soak temperature was `41.076 C` at stock VCCINT (`0.803 V` observed), no
+voltage command was used, and the exact qualified 525 MHz image was restored.
+
+This is a one-card hardware qualification, not a six-card fleet qualification.
+The public launchers therefore retain 525 MHz as the default and require
+explicit `--qualified-650` selection. Installed systemd fleets use
+`FJAR_FLEET_BITSTREAM=650` for a staged rollout and `525` for rollback. See
+[docs/FK33_NATIVE650.md](docs/FK33_NATIVE650.md).
 
 ## v0.4.0-beta: verified 525 MHz fleet release
 
@@ -42,7 +62,7 @@ covered 660 seconds with all six cards continuously active. A contemporaneous
 no 525 MHz efficiency claim. See
 [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
-## Hardware evidence
+## 525 MHz fleet evidence
 
 - Target: SQRL FK33 / `xcvu33p-fsvh2104-2-e`
 - Hash clock: 525 MHz
@@ -67,7 +87,7 @@ recomputed in Python and checked against the target before submission.
 
 Programming replaces the FPGA's active configuration. Stop every other Vivado,
 hardware-server, USB/IP, or SQRL process that can control the cards. The image
-is only for an FK33 XCVU33P. Sustained 525 MHz operation requires adequate
+is only for an FK33 XCVU33P. Sustained 525 or 650 MHz operation requires adequate
 power and cooling. No voltage change is performed by this software.
 
 The SQRL bridge listens on all interfaces. Firewall its port range or use an
@@ -134,6 +154,14 @@ control. Systems lacking ABI-5 ncurses/tinfo libraries must point
 The launcher validates each selected serial as an FTDI `0403:6010` device and
 will release only those selected interfaces from `ftdi_sio`.
 
+The native 650 MHz image is checksum-pinned but remains opt-in until a
+multi-card fleet qualification is complete:
+
+```bash
+./start.sh doctor --qualified-650
+./start.sh --wallet 'fjarcode:YOUR_LOWERCASE_ADDRESS' --qualified-650
+```
+
 The included 550 MHz image is a checksum-pinned but otherwise unqualified
 experimental candidate, not a timing-signed or hardware-validated release
 image. It is never selected by default and requires explicit acknowledgement:
@@ -166,6 +194,7 @@ List cards in physical bridge scan order and assign consecutive ports:
   --wallet 'fjarcode:YOUR_LOWERCASE_ADDRESS' \
   --card 'FIRST_SERIAL:22000' \
   --card 'SECOND_SERIAL:22001' \
+  --bitstream 525 \
   --compat-libs '/path/to/authorized/compat_libs' \
   --install-udev \
   --enable-linger

@@ -101,6 +101,26 @@ class ProtocolTests(unittest.TestCase):
             unit.index("ExecStart=/usr/bin/python3"),
         )
 
+    def test_systemd_fleet_bitstream_selection_is_pinned(self):
+        launcher = (ROOT / "runtime" / "start-sqrl-fleet.sh").read_text()
+        self.assertIn("FJAR_FLEET_BITSTREAM:-525", launcher)
+        self.assertIn("fk33_fjar_bscan_525.bit", launcher)
+        self.assertIn("fk33_native_bscan_650_validated.bit", launcher)
+        self.assertIn(
+            "64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c",
+            launcher,
+        )
+        self.assertIn(
+            "bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39",
+            launcher,
+        )
+        self.assertIn("Mining bitstream checksum mismatch", launcher)
+
+    def test_installer_records_explicit_fleet_bitstream(self):
+        installer = (ROOT / "install.sh").read_text()
+        self.assertIn("--bitstream 525|650", installer)
+        self.assertIn("FJAR_FLEET_BITSTREAM=%s", installer)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

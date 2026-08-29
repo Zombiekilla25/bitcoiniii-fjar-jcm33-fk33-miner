@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # FK33 BitcoinIII fleet launcher
 #
-# This launcher never changes voltage. The SHA3-256T 525 MHz image is
-# fleet-tested on FK33/FJAR and may be deployed for BTC3 only after a one-card
-# hardware/software digest match and accepted pool share have been observed.
+# This launcher never changes voltage. The 525 MHz image remains the default.
+# The native 650 MHz image passed a 60-minute one-card BitcoinIII soak and
+# requires both explicit selection and canary acknowledgement for fleet use.
 
 set -Eeuo pipefail
 IFS=$'\n\t'
 
 readonly APP_NAME="fk33-btc3"
-readonly VERSION="0.1.0-rc1"
+readonly VERSION="0.2.0-rc1"
 readonly STABLE_BIT_SHA256="64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c"
+readonly QUALIFIED_650_BIT_SHA256="bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39"
 readonly DEFAULT_POOL_HOST="stratum.pythonpool.dev"
 readonly DEFAULT_POOL_PORT="3357"
 readonly DEFAULT_BASE_PORT="22000"
@@ -23,6 +24,7 @@ LIB_DIR="${FK33_LIB_DIR:-$SCRIPT_DIR/compat_libs}"
 BRIDGE="${FK33_BRIDGE:-$BIN_DIR/sqrl_bridge_rawjtag_coe}"
 MINER="${FK33_BTC3_MINER:-$RUNTIME_DIR/btc3_bridge.py}"
 STABLE_BITSTREAM="$BITSTREAM_DIR/fk33_fjar_bscan_525.bit"
+QUALIFIED_650_BITSTREAM="$BITSTREAM_DIR/fk33_native_bscan_650_validated.bit"
 BITSTREAM="$STABLE_BITSTREAM"
 CONFIG_FILE="${FK33_BTC3_CONFIG:-$SCRIPT_DIR/config-btc3.env}"
 STATE_DIR="${FK33_BTC3_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/$APP_NAME}"
@@ -36,6 +38,7 @@ WORKER_PREFIX="${BTC3_WORKER_PREFIX:-$(hostname -s 2>/dev/null || printf 'fk33')
 SERIAL_INPUT="${BTC3_SERIALS:-}"
 ALLOW_MISMATCH="${FK33_ALLOW_CARD_COUNT_MISMATCH:-0}"
 CANARY_PASSED="${FK33_BTC3_CANARY_PASSED:-0}"
+ALLOW_QUALIFIED_650="${FK33_BTC3_QUALIFIED_650:-0}"
 BITSTREAM_MODE="not checked"
 DRY_RUN=0
 FORCE_STOP=0
@@ -67,6 +70,8 @@ Start options:
   --pool-host HOST       Stratum host (default: stratum.pythonpool.dev)
   --pool-port PORT       Stratum port (default: 3357)
   --base-port PORT       First local hardware port (default: 22000)
+  --qualified-650        Select the pinned native 650 MHz image that passed
+                         the 60-minute one-card BitcoinIII soak
   --allow-card-count-mismatch
                          Continue if PCIe and USB/JTAG counts differ
   --canary-passed        Confirm a one-card BTC3 test produced matching
@@ -77,13 +82,15 @@ Start options:
 
 Optional config-btc3.env entries:
   BTC3_WALLET, BTC3_SERIALS, BTC3_WORKER_PREFIX, BTC3_POOL_HOST,
-  BTC3_POOL_PORT, BTC3_BASE_PORT, FK33_BTC3_CANARY_PASSED
+  BTC3_POOL_PORT, BTC3_BASE_PORT, FK33_BTC3_CANARY_PASSED,
+  FK33_BTC3_QUALIFIED_650
 
 Package layout:
   start-btc3.sh
   third_party/sqrl/sqrl_bridge_rawjtag_coe
   runtime/btc3_bridge.py
   hardware/prebuilt/fk33_fjar_bscan_525.bit
+  hardware/prebuilt/fk33_native_bscan_650_validated.bit
   compat_libs/                         (only when compatibility libraries are needed)
 
 An actual start may use non-interactive sudo to release only the selected
@@ -121,6 +128,8 @@ load_config() {
   SERIAL_INPUT="${BTC3_SERIALS:-$SERIAL_INPUT}"
   ALLOW_MISMATCH="${FK33_ALLOW_CARD_COUNT_MISMATCH:-$ALLOW_MISMATCH}"
   CANARY_PASSED="${FK33_BTC3_CANARY_PASSED:-$CANARY_PASSED}"
+  ALLOW_QUALIFIED_650="${FK33_BTC3_QUALIFIED_650:-$ALLOW_QUALIFIED_650}"
+  [[ "$ALLOW_QUALIFIED_650" != 1 ]] || BITSTREAM="$QUALIFIED_650_BITSTREAM"
 }
 
 parse_args() {
@@ -140,6 +149,11 @@ parse_args() {
       --pool-host) require_value "$1" "${2:-}"; POOL_HOST="$2"; shift 2 ;;
       --pool-port) require_value "$1" "${2:-}"; POOL_PORT="$2"; shift 2 ;;
       --base-port) require_value "$1" "${2:-}"; BASE_PORT="$2"; shift 2 ;;
+      --qualified-650)
+        BITSTREAM="$QUALIFIED_650_BITSTREAM"
+        ALLOW_QUALIFIED_650=1
+        shift
+        ;;
       --lines) require_value "$1" "${2:-}"; FK33_LOG_LINES="$2"; shift 2 ;;
       --allow-card-count-mismatch) ALLOW_MISMATCH=1; shift ;;
       --canary-passed) CANARY_PASSED=1; shift ;;
@@ -214,9 +228,20 @@ validate_files() {
 
   local actual_sha
   actual_sha="$(sha256sum "$BITSTREAM" | awk '{print $1}')"
-  [[ "$actual_sha" == "$STABLE_BIT_SHA256" ]] ||
-    die "BTC3 fleet requires the pinned 525 MHz SHA3-256T image; got $actual_sha"
-  BITSTREAM_MODE="pinned 525 MHz SHA3-256T image (BTC3 fleet)"
+  case "$actual_sha" in
+    "$STABLE_BIT_SHA256")
+      BITSTREAM_MODE="pinned 525 MHz SHA3-256T image (BTC3 fleet)"
+      ;;
+    "$QUALIFIED_650_BIT_SHA256")
+      [[ "$ALLOW_QUALIFIED_650" == 1 ]] ||
+        die "the pinned 650 MHz image requires --qualified-650"
+      BITSTREAM_MODE="pinned native 650 MHz one-card-qualified image (BTC3 fleet)"
+      warn "650 MHz passed one FK33 for 60 minutes; this is a staged fleet deployment"
+      ;;
+    *)
+      die "BTC3 fleet requires a pinned 525 or 650 MHz SHA3-256T image; got $actual_sha"
+      ;;
+  esac
 
   if [[ -f "$SCRIPT_DIR/SHA256SUMS" ]]; then
     (cd "$SCRIPT_DIR" && sha256sum --quiet -c SHA256SUMS) ||

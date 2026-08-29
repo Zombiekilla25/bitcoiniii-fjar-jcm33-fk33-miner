@@ -80,11 +80,17 @@ class Btc3LauncherTests(unittest.TestCase):
         self.assertIn("--canary-passed", self.fleet)
         self.assertIn("CANARY_PASSED", self.fleet)
 
-    def test_fleet_stays_on_pinned_525_image(self):
+    def test_fleet_keeps_525_default_and_pins_650_opt_in(self):
         self.assertIn(
             "64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c",
             self.fleet,
         )
+        self.assertIn(
+            "bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39",
+            self.fleet,
+        )
+        self.assertIn('BITSTREAM="$STABLE_BITSTREAM"', self.fleet)
+        self.assertIn("--qualified-650", self.fleet)
         self.assertNotIn("experimental-550", self.fleet)
 
 

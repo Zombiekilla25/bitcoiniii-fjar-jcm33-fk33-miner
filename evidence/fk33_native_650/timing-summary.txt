@@ -1,0 +1,10 @@
+selected_candidate=route_00_Performance_ExplorePostRoutePhysOpt
+strategy=Performance_ExplorePostRoutePhysOpt
+setup_wns_ns=0.002
+hold_whs_ns=0.007
+bitstream_compression=false
+route_status=qualified
+
+The setup and hold margins are positive but extremely narrow. Treat 650 MHz
+as the ceiling for this exact route. A higher clock requires a new timing-gated
+build and rollback-protected hardware qualification.

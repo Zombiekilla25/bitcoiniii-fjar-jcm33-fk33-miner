@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VERSION="0.4.0-beta"
+VERSION="0.5.0-beta"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 INSTALL_ROOT="$HOME/.local/share/fk33-fjar-miner"
 INSTALL_DIR="$INSTALL_ROOT/$VERSION"
@@ -18,6 +18,7 @@ SQRL_BRIDGE="$SCRIPT_DIR/third_party/sqrl/sqrl_bridge_rawjtag_coe"
 COMPAT_LIBS=""
 POOL_HOST="stratum.pythonpool.dev"
 POOL_PORT="3358"
+BITSTREAM_SELECTION="525"
 INSTALL_UDEV=0
 ENABLE_LINGER=0
 START_NOW=0
@@ -39,6 +40,8 @@ Options:
   --compat-libs DIR      Directory containing required legacy shared libraries
   --pool-host HOST       Compatible Stratum v1 host
   --pool-port PORT       Compatible Stratum v1 port
+  --bitstream 525|650    Select the authenticated image (default: 525);
+                         650 is one-card qualified and a staged fleet rollout
   --install-udev         Install serial-specific USB permissions (needs sudo -n)
   --enable-linger        Start user services before login (needs sudo -n)
   --start                Enable and start the complete fleet after installation
@@ -77,6 +80,8 @@ while (($#)); do
             need_value "$@"; POOL_HOST=$2; shift 2 ;;
         --pool-port)
             need_value "$@"; POOL_PORT=$2; shift 2 ;;
+        --bitstream)
+            need_value "$@"; BITSTREAM_SELECTION=$2; shift 2 ;;
         --install-udev)
             INSTALL_UDEV=1; shift ;;
         --enable-linger)
@@ -102,6 +107,11 @@ if ((${#CARDS[@]} == 0)); then
 fi
 if [[ ! "$POOL_HOST" =~ ^[A-Za-z0-9.-]+$ ]] || ! valid_port "$POOL_PORT"; then
     printf 'Invalid pool host or port.\n' >&2
+    exit 2
+fi
+if [[ "$BITSTREAM_SELECTION" != 525 && "$BITSTREAM_SELECTION" != 650 ]]; then
+    printf 'Invalid --bitstream value: %s (expected 525 or 650).\n' \
+        "$BITSTREAM_SELECTION" >&2
     exit 2
 fi
 if [[ ! -x "$SQRL_BRIDGE" ]]; then
@@ -205,6 +215,7 @@ SERIAL_LIST=$(IFS=,; printf '%s' "${SERIALS[*]}")
 {
     printf 'FJAR_FLEET_SERIALS=%s\n' "$SERIAL_LIST"
     printf 'FJAR_FLEET_BASE_PORT=%s\n' "$BASE_PORT"
+    printf 'FJAR_FLEET_BITSTREAM=%s\n' "$BITSTREAM_SELECTION"
 } >"$CONFIG_DIR/fleet.env"
 
 for INDEX in "${!SERIALS[@]}"; do
@@ -254,6 +265,7 @@ printf '\nInstalled FK33 FJAR Miner %s\n' "$VERSION"
 printf 'Release: %s\n' "$INSTALL_DIR"
 printf 'Fleet:   %s\n' "$SERIAL_LIST"
 printf 'Ports:   %s-%s\n' "$BASE_PORT" "${PORTS[-1]}"
+printf 'Image:   %s MHz\n' "$BITSTREAM_SELECTION"
 printf 'Config:  %s\n' "$CONFIG_DIR"
 printf 'SQRL:    %s\n' "$PRIVATE_BIN/sqrl_bridge_rawjtag_coe"
 printf 'Udev:    %s\n' "$UDEV_GENERATED"

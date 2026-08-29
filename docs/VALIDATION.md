@@ -1,5 +1,26 @@
 # Hardware validation
 
+## Native FK33 650 MHz — v0.5.0-beta
+
+The native eight-bit 650 MHz image completed these gates on one physical FK33:
+
+1. Exact uncompressed bitstream identity and VU33P target verification.
+2. Native eight-bit FK33 transport identity.
+3. Positive routed timing: setup WNS `+0.002 ns`, hold WHS `+0.007 ns`.
+4. Sixty-minute BitcoinIII hardware soak at unchanged voltage.
+5. 740 hardware share frames with matching hardware/software digests.
+6. 65 byte-identical duplicate candidates suppressed before submission.
+7. 675 submitted and 675 accepted pool shares.
+8. Zero rejected shares, digest mismatches, and protocol errors.
+9. Post-soak temperature `41.076 C` and VCCINT `0.803 V` observed.
+10. Exact qualified 525 MHz rollback loaded and confirmed.
+
+This qualifies one card and one route; it does not establish fleet-wide yield.
+The 650 MHz image remains an explicit selection until a multi-card rollout
+passes.
+
+## FK33 525 MHz fleet — v0.4.0-beta
+
 The `v0.4.0-beta` standalone path completed these gates on Ubuntu 24.04
 x86-64:
 

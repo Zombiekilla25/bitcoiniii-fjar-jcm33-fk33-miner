@@ -1,0 +1,21 @@
+test=one physical FK33 native-transport BitcoinIII soak
+duration_minutes=60
+hardware_share_frames=740
+duplicate_candidates_suppressed=65
+submitted=675
+accepted=675
+rejected=0
+hardware_software_mismatches=0
+protocol_errors=0
+rollback_525=pass
+voltage_command_used=false
+developer_wallet_rotation=0.00%
+initial_temperature_c=27.646
+post_soak_temperature_c=41.076
+initial_vccint_v=0.809
+post_soak_vccint_v=0.803
+termination=expected timeout SIGINT after the configured soak window
+
+Every submitted share was accepted. The 65 remaining hardware frames were
+byte-identical duplicate candidates and were suppressed before submission.
+The exact qualified 525 MHz image was loaded after the soak.

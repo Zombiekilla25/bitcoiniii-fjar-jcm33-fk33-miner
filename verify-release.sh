@@ -92,8 +92,8 @@ else
 fi
 
 printf '\nChecking release invariants...\n'
-[[ $(<VERSION) == 0.4.0-beta ]]
-grep -Fq 'VERSION="0.4.0-beta"' install.sh
+[[ $(<VERSION) == 0.5.0-beta ]]
+grep -Fq 'VERSION="0.5.0-beta"' install.sh
 grep -Fq 'USER_WALLET = os.environ.get("FJAR_WALLET", "").strip()' \
     runtime/fjar_bridge.py
 grep -Fq 'FJAR_WORK_ROLL_SECONDS' runtime/fjar_bridge.py
@@ -125,6 +125,24 @@ printf '%s  %s\n' "$EXPECTED_BIT_500_SHA" \
 EXPECTED_BIT_525_SHA='64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c'
 printf '%s  %s\n' "$EXPECTED_BIT_525_SHA" \
     hardware/prebuilt/fk33_fjar_bscan_525.bit | sha256sum --check
+
+EXPECTED_BIT_650_SHA='bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39'
+printf '%s  %s\n' "$EXPECTED_BIT_650_SHA" \
+    hardware/prebuilt/fk33_native_bscan_650_validated.bit | sha256sum --check
+file hardware/prebuilt/fk33_native_bscan_650_validated.bit |
+    grep -Fq 'COMPRESS=FALSE'
+grep -Fq 'top=miner_top_ii1_bscan_650' \
+    evidence/fk33_native_650/bitstream-identity.txt
+grep -Fq 'setup_wns_ns=0.002' \
+    evidence/fk33_native_650/timing-summary.txt
+grep -Fq 'hold_whs_ns=0.007' \
+    evidence/fk33_native_650/timing-summary.txt
+grep -Fq 'submitted=675' evidence/fk33_native_650/soak-60m-summary.txt
+grep -Fq 'accepted=675' evidence/fk33_native_650/soak-60m-summary.txt
+grep -Fq 'rejected=0' evidence/fk33_native_650/soak-60m-summary.txt
+grep -Fq 'hardware_software_mismatches=0' \
+    evidence/fk33_native_650/soak-60m-summary.txt
+grep -Fq 'rollback_525=pass' evidence/fk33_native_650/soak-60m-summary.txt
 
 EXPECTED_BIT_550_SHA='de9621edb8fdb1df35270ac601668b0b30ada110c5ed446114755c7093a2e8db'
 printf '%s  %s\n' "$EXPECTED_BIT_550_SHA" \
@@ -166,18 +184,28 @@ grep -Fq 'FINAL SETUP WNS: 0.010 ns' evidence/jcm33_bitcoiniii_dualalign_650/tim
 grep -Fq 'FINAL HOLD  WHS: 0.010 ns' evidence/jcm33_bitcoiniii_dualalign_650/timing-summary.txt
 
 grep -Fq "$EXPECTED_BIT_525_SHA" start.sh
+grep -Fq "$EXPECTED_BIT_650_SHA" start.sh
 grep -Fq "$EXPECTED_BIT_550_SHA" start.sh
+grep -Fq -- '--qualified-650' start.sh
 grep -Fq -- '--experimental-550' start.sh
-grep -Fq 'readonly VERSION="0.1.0-rc3"' start.sh
+grep -Fq 'readonly VERSION="0.2.0-rc1"' start.sh
 grep -Fq '/sys/bus/usb/drivers/ftdi_sio/unbind' start.sh
 grep -Fq 'cd "$STATE_DIR"' start.sh
 grep -Fq ') 9>&-' start.sh
 grep -Fq 'python3 -u "$MINER" 9>&-' start.sh
+grep -Fq "$EXPECTED_BIT_525_SHA" start-btc3.sh
+grep -Fq "$EXPECTED_BIT_650_SHA" start-btc3.sh
+grep -Fq -- '--qualified-650' start-btc3.sh
+grep -Fq 'readonly VERSION="0.2.0-rc1"' start-btc3.sh
 
 EXPECTED_RUNTIME_SHA='6578399d1b1d000e46223ee7aef256e1bf081b8540f512261e6b9b06a376322b'
 printf '%s  %s\n' "$EXPECTED_RUNTIME_SHA" \
     runtime/fjar_bridge.py | sha256sum --check
 grep -Fq 'fk33_fjar_bscan_525.bit' runtime/start-sqrl-fleet.sh
+grep -Fq 'fk33_native_bscan_650_validated.bit' runtime/start-sqrl-fleet.sh
+grep -Fq 'FJAR_FLEET_BITSTREAM' runtime/start-sqrl-fleet.sh
+grep -Fq "$EXPECTED_BIT_650_SHA" runtime/start-sqrl-fleet.sh
+grep -Fq 'FJAR_FLEET_BITSTREAM=%s' install.sh
 
 for CLOCK in 500 525; do
     BIT="hardware/prebuilt/fk33_fjar_bscan_${CLOCK}.bit"

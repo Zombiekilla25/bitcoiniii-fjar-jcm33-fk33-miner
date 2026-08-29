@@ -8,7 +8,7 @@ interchangeable.
 |---|---|---|---|
 | JCM33 dual-FPGA carrier | BitcoinIII | Physically validated at 650 MHz | `hardware/prebuilt/jcm33_bitcoiniii_dualalign_650_validated.bit` |
 | FK33 | FJAR | Six-card fleet validated at 525 MHz | `hardware/prebuilt/fk33_fjar_bscan_525.bit` |
-| FK33 | BitcoinIII | Guarded canary/fleet software path | Uses the qualified FK33 525 MHz SHA3-256T image |
+| FK33 | BitcoinIII | One-card validated at native 650 MHz | `hardware/prebuilt/fk33_native_bscan_650_validated.bit` |
 
 ## JCM33 production boundary
 
@@ -38,6 +38,11 @@ and 525 MHz images remain additional fallbacks.
 ## FK33 boundary
 
 The FK33 FJAR path retains the verified 525 MHz fleet release and its 500 MHz
-rollback image. The BitcoinIII FK33 launchers remain gated by the one-card
-canary procedure in [BTC3_CANARY.md](BTC3_CANARY.md). The JCM33 650 MHz image
-must not be used on FK33 because its dual-device JTAG alignment is different.
+rollback image. The native FK33 650 MHz image passed a 60-minute BitcoinIII
+soak on one physical card with 675/675 submitted shares accepted and zero
+digest mismatches. It is opt-in because it has not yet completed a multi-card
+fleet qualification. See [FK33_NATIVE650.md](FK33_NATIVE650.md).
+
+The BitcoinIII FK33 launchers remain guarded by explicit canary
+acknowledgement. The JCM33 650 MHz image must not be used on FK33 because its
+dual-device JTAG alignment is different.

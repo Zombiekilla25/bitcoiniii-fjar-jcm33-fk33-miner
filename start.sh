@@ -2,16 +2,17 @@
 # FK33 FJAR portable launcher
 #
 # This launcher never changes voltage.  The default accepted bitstream is the
-# six-card fleet-tested 525 MHz image whose SHA-256 is pinned below.  The
-# unqualified and not hardware-tested 550 MHz candidate requires an explicit
-# flag.
+# six-card fleet-tested 525 MHz image whose SHA-256 is pinned below. The
+# one-card hardware-qualified native 650 MHz image and the unqualified 550 MHz
+# candidate both require explicit selection.
 
 set -Eeuo pipefail
 IFS=$'\n\t'
 
 readonly APP_NAME="fk33-fjar"
-readonly VERSION="0.1.0-rc3"
+readonly VERSION="0.2.0-rc1"
 readonly STABLE_BIT_SHA256="64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c"
+readonly QUALIFIED_650_BIT_SHA256="bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39"
 readonly EXPERIMENTAL_550_BIT_SHA256="de9621edb8fdb1df35270ac601668b0b30ada110c5ed446114755c7093a2e8db"
 readonly DEFAULT_POOL_HOST="stratum.pythonpool.dev"
 readonly DEFAULT_POOL_PORT="3358"
@@ -25,6 +26,7 @@ LIB_DIR="${FK33_LIB_DIR:-$SCRIPT_DIR/compat_libs}"
 BRIDGE="${FK33_BRIDGE:-$BIN_DIR/sqrl_bridge_rawjtag_coe}"
 MINER="${FK33_MINER:-$RUNTIME_DIR/fjar_bridge.py}"
 STABLE_BITSTREAM="$BITSTREAM_DIR/fk33_fjar_bscan_525.bit"
+QUALIFIED_650_BITSTREAM="$BITSTREAM_DIR/fk33_native_bscan_650_validated.bit"
 EXPERIMENTAL_550_BITSTREAM="$BITSTREAM_DIR/fk33_fjar_bscan_550_experimental.bit"
 BITSTREAM="${FK33_BITSTREAM:-$STABLE_BITSTREAM}"
 CONFIG_FILE="${FK33_CONFIG:-$SCRIPT_DIR/config.env}"
@@ -38,6 +40,7 @@ BASE_PORT="${FJAR_BASE_PORT:-$DEFAULT_BASE_PORT}"
 WORKER_PREFIX="${FJAR_WORKER_PREFIX:-$(hostname -s 2>/dev/null || printf 'fk33')}"
 SERIAL_INPUT="${FJAR_SERIALS:-}"
 ALLOW_MISMATCH="${FK33_ALLOW_CARD_COUNT_MISMATCH:-0}"
+ALLOW_QUALIFIED_650="${FK33_ALLOW_QUALIFIED_650:-0}"
 ALLOW_EXPERIMENTAL_550="${FK33_ALLOW_EXPERIMENTAL_550:-0}"
 ALLOW_UNVERIFIED="${FK33_ALLOW_UNVERIFIED_BITSTREAM:-0}"
 BITSTREAM_MODE="not checked"
@@ -71,6 +74,8 @@ Start options:
   --pool-host HOST       Stratum host (default: stratum.pythonpool.dev)
   --pool-port PORT       Stratum port (default: 3358)
   --base-port PORT       First local hardware port (default: 22000)
+  --qualified-650        Select the pinned native 650 MHz image; qualified on
+                         one FK33 for 60 minutes, not yet fleet-qualified
   --experimental-550     Select and explicitly acknowledge the unqualified,
                          hardware-unvalidated 550 MHz candidate
   --bitstream FILE       Bitstream path; nonstandard images require the
@@ -78,7 +83,7 @@ Start options:
   --allow-card-count-mismatch
                          Continue if PCIe and USB/JTAG counts differ
   --allow-unverified-bitstream
-                         Permit an image other than the pinned 525/550 builds
+                         Permit an image other than the pinned 525/550/650 builds
   --dry-run              Print the resolved plan without programming cards
   -h, --help             Show this help
   -V, --version          Show version
@@ -86,13 +91,14 @@ Start options:
 Optional config.env entries:
   FJAR_WALLET, FJAR_SERIALS, FJAR_WORKER_PREFIX, FJAR_POOL_HOST,
   FJAR_POOL_PORT, FJAR_BASE_PORT, FK33_BITSTREAM,
-  FK33_ALLOW_EXPERIMENTAL_550
+  FK33_ALLOW_QUALIFIED_650, FK33_ALLOW_EXPERIMENTAL_550
 
 Package layout:
   start.sh
   third_party/sqrl/sqrl_bridge_rawjtag_coe
   runtime/fjar_bridge.py
   hardware/prebuilt/fk33_fjar_bscan_525.bit
+  hardware/prebuilt/fk33_native_bscan_650_validated.bit
   hardware/prebuilt/fk33_fjar_bscan_550_experimental.bit
   compat_libs/                         (only when compatibility libraries are needed)
 
@@ -131,6 +137,7 @@ load_config() {
   SERIAL_INPUT="${FJAR_SERIALS:-$SERIAL_INPUT}"
   BITSTREAM="${FK33_BITSTREAM:-$BITSTREAM}"
   ALLOW_MISMATCH="${FK33_ALLOW_CARD_COUNT_MISMATCH:-$ALLOW_MISMATCH}"
+  ALLOW_QUALIFIED_650="${FK33_ALLOW_QUALIFIED_650:-$ALLOW_QUALIFIED_650}"
   ALLOW_EXPERIMENTAL_550="${FK33_ALLOW_EXPERIMENTAL_550:-$ALLOW_EXPERIMENTAL_550}"
   ALLOW_UNVERIFIED="${FK33_ALLOW_UNVERIFIED_BITSTREAM:-$ALLOW_UNVERIFIED}"
 }
@@ -152,6 +159,11 @@ parse_args() {
       --pool-host) require_value "$1" "${2:-}"; POOL_HOST="$2"; shift 2 ;;
       --pool-port) require_value "$1" "${2:-}"; POOL_PORT="$2"; shift 2 ;;
       --base-port) require_value "$1" "${2:-}"; BASE_PORT="$2"; shift 2 ;;
+      --qualified-650)
+        BITSTREAM="$QUALIFIED_650_BITSTREAM"
+        ALLOW_QUALIFIED_650=1
+        shift
+        ;;
       --experimental-550)
         BITSTREAM="$EXPERIMENTAL_550_BITSTREAM"
         ALLOW_EXPERIMENTAL_550=1
@@ -235,6 +247,13 @@ validate_files() {
   case "$actual_sha" in
     "$STABLE_BIT_SHA256")
       BITSTREAM_MODE="pinned 525 MHz fleet-tested image"
+      ;;
+    "$QUALIFIED_650_BIT_SHA256")
+      if [[ "$ALLOW_QUALIFIED_650" != 1 ]]; then
+        die "the pinned 650 MHz image is one-card qualified; select it with --qualified-650"
+      fi
+      BITSTREAM_MODE="pinned native 650 MHz one-card-qualified image"
+      warn "650 MHz passed a 60-minute one-card soak; this host remains a staged fleet deployment"
       ;;
     "$EXPERIMENTAL_550_BIT_SHA256")
       if [[ "$ALLOW_EXPERIMENTAL_550" != 1 ]]; then

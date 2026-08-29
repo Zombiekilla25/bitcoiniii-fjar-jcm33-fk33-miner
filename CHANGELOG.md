@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Added the exact native eight-bit FK33 650 MHz image with SHA-256
+  `bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39`.
+- Recorded a 60-minute one-card BitcoinIII soak: 740 hardware share frames,
+  65 duplicate candidates suppressed, 675 submitted and accepted shares, zero
+  rejects, zero hardware/software mismatches, and zero protocol errors.
+- Recorded positive routed setup WNS `+0.002 ns`, hold WHS `+0.007 ns`, stock
+  VCCINT, a `41.076 C` post-soak temperature, no voltage command, and verified
+  restoration of the exact qualified 525 MHz image.
+- Added checksum-pinned, explicit 650 MHz selection to the portable FJAR and
+  BitcoinIII launchers and to installed systemd fleets.
+- Retained 525 MHz as the public fleet default because 650 MHz is qualified on
+  one FK33 but has not yet completed a multi-card fleet qualification.
+
 - Promoted the timing-clean JCM33 dual-FPGA BitcoinIII 650 MHz image after a
   5-minute canary and 60-minute soak totaling A=1,380 and B=1,362 accepted
   shares with zero rejects and zero hardware/software digest mismatches.

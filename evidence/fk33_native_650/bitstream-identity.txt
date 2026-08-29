@@ -1,0 +1,11 @@
+artifact=hardware/prebuilt/fk33_native_bscan_650_validated.bit
+sha256=bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39
+bytes=28329354
+format=Xilinx BIT
+part=xcvu33p-fsvh2104-2-e
+top=miner_top_ii1_bscan_650
+transport=fk33-native-8-bit
+compression=false
+vivado=2026.1
+routed_dcp_sha256=acd8300dce3ae30605aa07be4af48c6a95f60285b7ec6e662f36d85c8fba2205
+transport_source_sha256=a4bb941c1251d1a2f24e7af868e92c85459c151b3eb3b6be4bc7569663e772ae
