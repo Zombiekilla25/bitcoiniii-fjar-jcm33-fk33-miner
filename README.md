@@ -6,6 +6,7 @@ Validated SHA3-256T FPGA mining software for two SQRL XCVU33P platforms:
 |---|---|---|---|
 | JCM33 dual-FPGA carrier | BitcoinIII | dual-alignment 650 MHz | A=1,380 + B=1,362 accepted across 5m/60m runs; 0 rejected; 0 digest mismatches |
 | FK33 | FJAR | standalone 525 MHz default | six-card 680/680 accepted-share fleet sample |
+| FK33 | FJAR | native 650 MHz opt-in | one-card 5m compatibility canary; 269 accepted; 0 rejected; 0 mismatches |
 | FK33 | BitcoinIII | native 650 MHz opt-in | one-card 60m soak; 675/675 accepted; 0 mismatches |
 
 The JCM33 and FK33 images use different physical transports and are not
@@ -32,6 +33,12 @@ protocol errors.
 The selected route has setup WNS `+0.002 ns` and hold WHS `+0.007 ns`. The
 post-soak temperature was `41.076 C` at stock VCCINT (`0.803 V` observed), no
 voltage command was used, and the exact qualified 525 MHz image was restored.
+
+The same exact bitstream subsequently completed a 300-second FJAR compatibility
+canary on one physical FK33: 304 hardware share frames, 269 pool-accepted
+shares, zero rejected shares, zero hardware/software mismatches, zero protocol
+errors, and authenticated restoration of the 525 MHz image. This is a
+protocol/runtime compatibility result, not a FJAR fleet qualification.
 
 This is a one-card hardware qualification, not a six-card fleet qualification.
 The public launchers therefore retain 525 MHz as the default and require
