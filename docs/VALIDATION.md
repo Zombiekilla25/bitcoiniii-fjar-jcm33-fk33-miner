@@ -15,6 +15,21 @@ The native eight-bit 650 MHz image completed these gates on one physical FK33:
 9. Post-soak temperature `41.076 C` and VCCINT `0.803 V` observed.
 10. Exact qualified 525 MHz rollback loaded and confirmed.
 
+### FJAR compatibility gate
+
+The same exact 650 MHz image also completed a bounded five-minute FJAR
+compatibility canary on one physical FK33:
+
+1. Pool subscription and payout-address authorization passed before programming.
+2. 304 hardware share frames were received.
+3. 269 shares were accepted by the FJAR pool.
+4. Zero rejected shares, digest mismatches, and protocol errors occurred.
+5. No voltage command was issued.
+6. The exact authenticated 525 MHz rollback image was restored afterward.
+
+This confirms one-card FJAR protocol/runtime compatibility. It is not a
+multi-card FJAR fleet qualification.
+
 This qualifies one card and one route; it does not establish fleet-wide yield.
 The 650 MHz image remains an explicit selection until a multi-card rollout
 passes.

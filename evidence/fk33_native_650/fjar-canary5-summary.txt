@@ -1,0 +1,36 @@
+FK33 FJAR 650 MHz compatibility canary
+=========================================
+
+Date: 2026-08-30
+Scope: bounded one-card, five-minute FJAR compatibility canary
+Duration target: 300 seconds
+Result: PASS
+
+Bitstream
+---------
+Path: hardware/prebuilt/fk33_native_bscan_650_validated.bit
+SHA-256: bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39
+Clock: 650 MHz
+Voltage command: none
+
+Observed results
+----------------
+Hardware share frames: 304
+Pool-accepted shares: 269
+Rejected shares: 0
+Hardware/software mismatches: 0
+Protocol errors: 0
+
+Rollback
+--------
+Path: hardware/prebuilt/fk33_fjar_bscan_525.bit
+SHA-256: 64e0a7d21a10b4aa04b340c826af7d75363b5d5ba5e39330fe28c42ff103821c
+Authenticated rollback: PASS
+
+Validation boundary
+-------------------
+This run establishes compatibility between the exact native 650 MHz image, the
+portable FJAR runtime, the FK33 transport, and the FJAR pool protocol on one
+physical card. It is not a multi-card fleet qualification. The public FJAR
+launcher therefore retains 525 MHz as its default and requires explicit
+--qualified-650 selection.

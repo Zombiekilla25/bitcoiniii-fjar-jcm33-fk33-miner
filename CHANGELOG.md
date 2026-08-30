@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Recorded a bounded five-minute FJAR 650 MHz compatibility canary on one
+  physical FK33: 304 hardware share frames, 269 accepted shares, zero rejects,
+  zero hardware/software mismatches, zero protocol errors, no voltage command,
+  and authenticated 525 MHz rollback.
+- Kept 525 MHz as the FJAR fleet default; the new result establishes one-card
+  protocol/runtime compatibility rather than multi-card fleet qualification.
 - Added the exact native eight-bit FK33 650 MHz image with SHA-256
   `bd494ba2ea697a5e916b51caf4bdab8e5c620cd121bfd4b2e9a806deb5596c39`.
 - Recorded a 60-minute one-card BitcoinIII soak: 740 hardware share frames,
