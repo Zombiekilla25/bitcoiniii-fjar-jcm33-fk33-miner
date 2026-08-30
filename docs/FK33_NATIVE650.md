@@ -23,6 +23,23 @@ The image is hardware-qualified on one FK33, not yet fleet-qualified across
 multiple cards. The positive timing margin is only `0.002 ns`; 650 MHz is the
 ceiling for this exact route.
 
+## FJAR compatibility canary
+
+The exact same bitstream completed a bounded 300-second FJAR test on one
+physical FK33 using the portable launcher and production pool protocol:
+
+- 304 hardware share frames
+- 269 accepted pool shares
+- Zero rejected shares
+- Zero hardware/software digest mismatches
+- Zero protocol errors
+- No voltage command
+- Authenticated 525 MHz rollback confirmed
+
+This establishes FJAR protocol and runtime compatibility on one card. It does
+not establish multi-card FJAR fleet qualification, so 525 MHz remains the
+default.
+
 ## Portable selection
 
 The portable FJAR launcher retains 525 MHz as its default. Select 650 MHz
